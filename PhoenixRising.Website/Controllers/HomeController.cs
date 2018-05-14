@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using PhoenixRising.InternalAPI;
 
 namespace PhoenixRising.Website.Controllers
 {
@@ -16,7 +17,6 @@ namespace PhoenixRising.Website.Controllers
                 HttpOnly = true,
                 Expires = DateTime.Now.AddMinutes(1)
             });
-            
             return View();
         }
 
