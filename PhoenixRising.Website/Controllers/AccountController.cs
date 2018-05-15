@@ -94,6 +94,9 @@ namespace PhoenixRising.Website.Controllers
 
                     if (loginResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
+                        //get username from api
+                        //store username as cookie (same expiration as accesstoken)
+
                         //Create login cookies
                         Response.Cookies.Add(new HttpCookie("AccessToken")
                         {
@@ -108,6 +111,8 @@ namespace PhoenixRising.Website.Controllers
                             HttpOnly = true,
                             Expires = DateTime.Now.AddDays(60)
                         });
+
+                        //only store refresh token if remember me is checked
                         Response.Cookies.Add(new HttpCookie("RefreshToken")
                         {
                             Value = loginResponse.refresh_token,

@@ -9,6 +9,7 @@ namespace PhoenixRising.Website.Models
 {
     public class Register
     {
+        //TODO: What are the requirements for these
         [Required]
         [MaxLength(100)]
         [Display(Name = "First Name")]
