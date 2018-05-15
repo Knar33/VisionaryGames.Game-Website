@@ -1,7 +1,8 @@
 ﻿
 @{
-    ViewBag.Title = "Account";
+    ViewBag.Title = "Login";
 }
+
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">@TempData["Success"]</div>
@@ -10,6 +11,5 @@
 {
     <div class="alert alert-danger">@TempData["Errors"]</div>
 }
-<br />
-User ID:<h3>@ViewBag.Username</h3>
-Username: Not implemented
+<h2>Login</h2>
+
