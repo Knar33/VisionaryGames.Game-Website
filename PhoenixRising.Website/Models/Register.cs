@@ -31,10 +31,12 @@ namespace PhoenixRising.Website.Models
 
         [Required]
         [MinLength(4)]
+        [Display(Name = "Password")]
         public string password1 { get; set; }
 
         [Required]
         [MinLength(4)]
+        [Display(Name = "Re-Type Password")]
         [System.ComponentModel.DataAnnotations.Compare("password1")]
         public string password2 { get; set; }
     }
