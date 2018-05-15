@@ -18,7 +18,7 @@ namespace PhoenixRising.Website.Controllers
         // GET: Account
         public ActionResult Index()
         {
-            HttpCookie username = Request.Cookies.Get("UserID");
+            HttpCookie username = Request.Cookies.Get("Username");
             if (username != null)
             {
                 ViewBag.Username = username.Value;
@@ -115,8 +115,8 @@ namespace PhoenixRising.Website.Controllers
                     }
                     else
                     {
-                        TempData["Success"] = "You have successfully registered an account.";
-                        return RedirectToAction("Index", "Account");
+                        TempData["Success"] = "You have successfully registered an account. You can now sign in below.";
+                        return RedirectToAction("Login", "Account");
                     }
                 }
                 else
