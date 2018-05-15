@@ -96,18 +96,14 @@ namespace PhoenixRising.Website.Controllers
                         {
                             //Add Expiration based on AccessToken Expiration
                             Value = loginResponse.access_token,
-                            HttpOnly = true
+                            HttpOnly = true,
+                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).DateTime
                         });
                         Response.Cookies.Add(new HttpCookie("UserID")
                         {
                             Value = loginResponse.user_id,
-                            HttpOnly = true
-                        });
-                        Response.Cookies.Add(new HttpCookie("AccessTokenExpiration")
-                        {
-                            //Remove this
-                            Value = loginResponse.expireTime,
-                            HttpOnly = true
+                            HttpOnly = true,
+                            Expires = DateTime.Now.AddDays(60)
                         });
                         Response.Cookies.Add(new HttpCookie("RefreshToken")
                         {
