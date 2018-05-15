@@ -23,6 +23,8 @@ namespace PhoenixRising.Website.Controllers
             {
                 ViewBag.accessToken = accessToken.Value;
 
+                //TODO: Get user ID and display that instead of access token
+
                 return View();
             }
             else
@@ -48,6 +50,7 @@ namespace PhoenixRising.Website.Controllers
         // GET: Account
         public ActionResult Register()
         {
+            //if logged in, go to account page
             return View();
         }
 
@@ -145,6 +148,7 @@ namespace PhoenixRising.Website.Controllers
         // GET: Account
         public ActionResult Login()
         {
+            //if logged in, go to account page
             return View();
         }
 
