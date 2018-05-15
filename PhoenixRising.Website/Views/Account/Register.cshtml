@@ -1,0 +1,52 @@
+﻿@model PhoenixRising.Website.Models.Register
+@{
+    ViewBag.Title = "Register";
+}
+
+<h2>Register</h2>
+
+@if (TempData["Errors"] != null)
+{
+    <div class="alert alert-danger">@TempData["Errors"]</div>
+}
+@using (Html.BeginForm("Register", "Account", FormMethod.Post, new { id = "Register-form" }))
+{
+    @Html.AntiForgeryToken();
+    <row>
+        <div class="col-md-6">
+            <h3>Basic Information</h3>
+            <div class="form-group">
+                @Html.LabelFor(m => m.Email, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Email)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.Nicknane, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.Nicknane, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Nicknane)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.FirstName, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.FirstName)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.LastName, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.LastName, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.LastName)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.password1, new { @class = "control-label" })
+                @Html.PasswordFor(m => m.password1, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.password1)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.password2, new { @class = "control-label" })
+                @Html.PasswordFor(m => m.password2, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.password2)
+            </div>
+
+            <input type="submit" value="Create Account" />
+        </div>
+    </row>
+}
