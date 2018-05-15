@@ -18,10 +18,10 @@ namespace PhoenixRising.Website.Controllers
         // GET: Account
         public ActionResult Index()
         {
-            HttpCookie username = Request.Cookies.Get("Username");
-            if (username != null)
+            HttpCookie accessToken = Request.Cookies.Get("AccessToken");
+            if (accessToken != null)
             {
-                ViewBag.Username = username.Value;
+                ViewBag.accessToken = accessToken.Value;
 
                 return View();
             }
@@ -94,6 +94,7 @@ namespace PhoenixRising.Website.Controllers
                         //Create login cookies
                         Response.Cookies.Add(new HttpCookie("AccessToken")
                         {
+                            //Add Expiration based on AccessToken Expiration
                             Value = loginResponse.access_token,
                             HttpOnly = true
                         });
@@ -104,6 +105,7 @@ namespace PhoenixRising.Website.Controllers
                         });
                         Response.Cookies.Add(new HttpCookie("AccessTokenExpiration")
                         {
+                            //Remove this
                             Value = loginResponse.expireTime,
                             HttpOnly = true
                         });
