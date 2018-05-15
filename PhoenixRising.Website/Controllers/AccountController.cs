@@ -22,9 +22,13 @@ namespace PhoenixRising.Website.Controllers
             if (username != null)
             {
                 ViewBag.Username = username.Value;
-            }
 
-            return View();
+                return View();
+            }
+            else
+            {
+                return RedirectToAction("Login", "Account");
+            }
         }
         
         // GET: Account
