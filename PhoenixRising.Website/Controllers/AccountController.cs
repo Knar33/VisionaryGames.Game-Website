@@ -44,12 +44,17 @@ namespace PhoenixRising.Website.Controllers
         {
             if (ModelState.IsValid)
             {
-                TempData["Success"] = "An email was sent to the email address provided. Please follow the instructions to reset your password";
+                APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+                RequestResetPasswordRequest resetRequest = new RequestResetPasswordRequest(connection, model.Email);
+                RequestResetPasswordResponse resetResponse = resetRequest.Send();
+
+                //always act like success - don't want people fishing for email addresses
+                TempData["Success"] = "An email was sent to the email address provided. Please follow the instructions to reset your password.";
                 return RedirectToAction("Login", "Account");
             }
             else
             {
-                return View();
+                return View(model);
             }
         }
 
@@ -150,18 +155,6 @@ namespace PhoenixRising.Website.Controllers
             {
                 //make login request
                 APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
-                KeyVaultClient KeyVault;
-                try
-                {
-                    var azureServiceTokenProvider = new AzureServiceTokenProvider();
-                    var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
-                    KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
-                var bundle = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result;
 
                 LoginRequest loginRequest = new LoginRequest(connection, model.Email, model.password);
                 LoginResponse loginResponse = loginRequest.Send();
@@ -206,7 +199,7 @@ namespace PhoenixRising.Website.Controllers
                 }
                 else
                 {
-                    if (loginResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                    if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
                         TempData["Errors"] = "Your email/password were invalid. Please try again.";
                     }
