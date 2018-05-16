@@ -221,6 +221,7 @@
     <Content Include="Views\Account\Index.cshtml" />
     <Content Include="settings.config" />
     <Content Include="Views\Account\Login.cshtml" />
+    <Content Include="Views\Account\PasswordReset.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
