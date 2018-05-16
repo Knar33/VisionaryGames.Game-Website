@@ -1,4 +1,4 @@
-﻿
+﻿@model PhoenixRising.Website.Models.Login
 @{
     ViewBag.Title = "Login";
 }
@@ -11,6 +11,30 @@
 {
     <div class="alert alert-danger">@TempData["Errors"]</div>
 }
-<h2>Login</h2>
 
-@Html.ActionLink("Register", "Register", "Account")
+@using (Html.BeginForm("Login", "Account", FormMethod.Post, new { id = "Login-form" }))
+{
+    @Html.AntiForgeryToken();
+    <row>
+        <div class="col-md-12">
+            <h3>Basic Information</h3>
+            <div class="form-group">
+                @Html.LabelFor(m => m.Email, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Email)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.password, new { @class = "control-label" })
+                @Html.PasswordFor(m => m.password, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.password)
+            </div>
+            <div class="form-group">
+                @Html.CheckBoxFor(m => m.RememberMe)
+                @Html.LabelFor(m => m.RememberMe)
+            </div>
+            <input type="submit" value="Login" />
+            <br /><br />
+            @Html.ActionLink("Register account", "Register", "Account")
+        </div>
+    </row>
+}
