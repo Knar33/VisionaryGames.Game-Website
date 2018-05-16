@@ -18,6 +18,7 @@ namespace PhoenixRising.Website.Controllers
         // GET: Account
         public ActionResult Index()
         {
+            //TODO: Make a filter for this auth shiz
             HttpCookie accessToken = Request.Cookies.Get("AccessToken");
             if (accessToken != null)
             {
@@ -27,6 +28,22 @@ namespace PhoenixRising.Website.Controllers
             }
             else
             {
+                HttpCookie refreshToken = Request.Cookies.Get("RefreshToken");
+                if (refreshToken != null)
+                {
+                    AuthenticationStore auth = new AuthenticationStore()
+                    {
+                        RefreshToken = refreshToken.Value
+                    };
+                    APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+                    RefreshRequest refreshRequest = new RefreshRequest(auth, connection);
+                    RefreshResponse refreshResponse = refreshRequest.Send();
+
+                    if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        return View();
+                    }
+                }
                 return RedirectToAction("Login", "Account");
             }
         }
@@ -45,12 +62,75 @@ namespace PhoenixRising.Website.Controllers
             if (ModelState.IsValid)
             {
                 APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+                KeyVaultClient KeyVault;
+                try
+                {
+                    var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                    var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
+                    KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+                var bundle = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result;
                 RequestResetPasswordRequest resetRequest = new RequestResetPasswordRequest(connection, model.Email);
+                resetRequest.AppAccessToken = bundle.Value;
                 RequestResetPasswordResponse resetResponse = resetRequest.Send();
 
                 //always act like success - don't want people fishing for email addresses
                 TempData["Success"] = "An email was sent to the email address provided. Please follow the instructions to reset your password.";
                 return RedirectToAction("Login", "Account");
+            }
+            else
+            {
+                return View(model);
+            }
+        }
+
+
+        // GET: Account
+        public ActionResult Password(string token)
+        {
+            Password model = new Password();
+            model.token = token;
+            return View(model);
+        }
+
+        // POST: Account
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Password(Password model)
+        {
+            if (ModelState.IsValid)
+            {
+                APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+                KeyVaultClient KeyVault;
+                try
+                {
+                    var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                    var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
+                    KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+                var bundle = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result;
+                ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, model.token, model.password);
+                resetRequest.AppAccessToken = bundle.Value;
+                ResetPasswordResponse resetResponse = resetRequest.Send();
+
+                if (resetResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    TempData["Success"] = "Your password was changed!";
+                    return RedirectToAction("Login", "Account");
+                }
+                else
+                {
+                    TempData["Errors"] = "There was an error processing your request";
+                    return View(model);
+                }
             }
             else
             {
@@ -69,6 +149,22 @@ namespace PhoenixRising.Website.Controllers
             }
             else
             {
+                HttpCookie refreshToken = Request.Cookies.Get("RefreshToken");
+                if (refreshToken != null)
+                {
+                    AuthenticationStore auth = new AuthenticationStore()
+                    {
+                        RefreshToken = refreshToken.Value
+                    };
+                    APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+                    RefreshRequest refreshRequest = new RefreshRequest(auth, connection);
+                    RefreshResponse refreshResponse = refreshRequest.Send();
+
+                    if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        return RedirectToAction("Index", "Account");
+                    }
+                }
                 return View();
             }
         }
@@ -142,6 +238,22 @@ namespace PhoenixRising.Website.Controllers
             }
             else
             {
+                HttpCookie refreshToken = Request.Cookies.Get("RefreshToken");
+                if (refreshToken != null)
+                {
+                    AuthenticationStore auth = new AuthenticationStore()
+                    {
+                        RefreshToken = refreshToken.Value
+                    };
+                    APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+                    RefreshRequest refreshRequest = new RefreshRequest(auth, connection);
+                    RefreshResponse refreshResponse = refreshRequest.Send();
+
+                    if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        return RedirectToAction("Index", "Account");
+                    }
+                }
                 return View();
             }
         }
