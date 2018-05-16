@@ -201,7 +201,7 @@ namespace PhoenixRising.Website.Controllers
                 {
                     if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
                     {
-                        TempData["Errors"] = "Your email/password were invalid. Please try again.";
+                        TempData["Errors"] = "Your email and password do not match. Please try again.";
                     }
                     else
                     {
