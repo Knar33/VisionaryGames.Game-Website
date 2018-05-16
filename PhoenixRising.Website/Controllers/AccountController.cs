@@ -15,7 +15,6 @@ namespace PhoenixRising.Website.Controllers
 {
     public class AccountController : Controller
     {
-        // GET: Account
         public ActionResult Index()
         {
             //TODO: Make a filter for this auth shiz
@@ -48,13 +47,11 @@ namespace PhoenixRising.Website.Controllers
             }
         }
         
-        // GET: Account
         public ActionResult PasswordReset()
         {
             return View();
         }
-
-        // POST: Account
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult PasswordReset(PasswordReset model)
@@ -87,17 +84,14 @@ namespace PhoenixRising.Website.Controllers
                 return View(model);
             }
         }
-
-
-        // GET: Account
+        
         public ActionResult Password(string token)
         {
             Password model = new Password();
             model.token = token;
             return View(model);
         }
-
-        // POST: Account
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Password(Password model)
@@ -137,8 +131,7 @@ namespace PhoenixRising.Website.Controllers
                 return View(model);
             }
         }
-
-        // GET: Account
+        
         public ActionResult Register()
         {
             //if logged in, go to account page
@@ -168,8 +161,7 @@ namespace PhoenixRising.Website.Controllers
                 return View();
             }
         }
-
-        // POST: Account
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Register(Register model)
@@ -226,8 +218,7 @@ namespace PhoenixRising.Website.Controllers
                 return View(model);
             }
         }
-
-        // GET: Account
+        
         public ActionResult Login()
         {
             //if logged in, go to account page
@@ -257,8 +248,7 @@ namespace PhoenixRising.Website.Controllers
                 return View();
             }
         }
-
-        // POST: Account
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Login(Login model)
@@ -327,8 +317,7 @@ namespace PhoenixRising.Website.Controllers
                 return View(model);
             }
         }
-
-        // GET: Account
+        
         public ActionResult Logout()
         {
             HttpCookie accessToken = Request.Cookies.Get("AccessToken");
