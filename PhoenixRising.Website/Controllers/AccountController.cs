@@ -8,50 +8,76 @@ using PhoenixRising.Website.Models;
 using PhoenixRising.InternalAPI.Website;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Azure.KeyVault;
-using PhoenixRising.InternalAPI.Authentication;
 using PhoenixRising.InternalAPI;
+using PhoenixRising.InternalAPI.Authentication;
+using PhoenixRising.InternalAPI.Account.Account;
 
 namespace PhoenixRising.Website.Controllers
 {
     public class AccountController : Controller
     {
+        //Index
         public ActionResult Index()
         {
+            bool authenticated = false;
+            AuthenticationStore auth = new AuthenticationStore();
+            APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+
             //TODO: Make a filter for this auth shiz
             HttpCookie accessToken = Request.Cookies.Get("AccessToken");
             if (accessToken != null)
             {
-                HttpCookie username = Request.Cookies.Get("UserName");
-                ViewBag.userName = username.Value;
-                return View();
+                auth.AccessToken = accessToken.Value;
+                auth.UserID = new Guid(Request.Cookies.Get("UserID").Value);
+                authenticated = true;
             }
             else
             {
                 HttpCookie refreshToken = Request.Cookies.Get("RefreshToken");
+
                 if (refreshToken != null)
                 {
-                    AuthenticationStore auth = new AuthenticationStore()
-                    {
-                        RefreshToken = refreshToken.Value
-                    };
-                    APIConnection connection = new APIConnection(ConfigurationManager.AppSettings["InternalAPIURL"]);
+                    auth.RefreshToken = refreshToken.Value;
                     RefreshRequest refreshRequest = new RefreshRequest(auth, connection);
                     RefreshResponse refreshResponse = refreshRequest.Send();
 
                     if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        return View();
+                        auth.AccessToken = refreshResponse.access_token;
+                        auth.UserID = new Guid(refreshResponse.user_id);
+                        authenticated = true;
                     }
                 }
+            }
+
+            if (authenticated)
+            {
+                GetUserDetailsRequest detailRequest = new GetUserDetailsRequest(auth, connection);
+                GetUserDetailsResponse model = detailRequest.Send();
+
+                if (model.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return View(model);
+                }
+                else
+                {
+                    TempData["Errors"] = "There was an error processing your request";
+                    return View();
+                }
+            }
+            else
+            {
                 return RedirectToAction("Login", "Account");
             }
         }
         
+        //Password Reset
         public ActionResult PasswordReset()
         {
             return View();
         }
         
+        //Password Reset POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult PasswordReset(PasswordReset model)
@@ -85,6 +111,7 @@ namespace PhoenixRising.Website.Controllers
             }
         }
         
+        //Password 
         public ActionResult Password(string token)
         {
             Password model = new Password();
@@ -92,6 +119,7 @@ namespace PhoenixRising.Website.Controllers
             return View(model);
         }
         
+        //Password POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Password(Password model)
@@ -132,6 +160,7 @@ namespace PhoenixRising.Website.Controllers
             }
         }
         
+        //Register
         public ActionResult Register()
         {
             //if logged in, go to account page
@@ -162,6 +191,7 @@ namespace PhoenixRising.Website.Controllers
             }
         }
         
+        //Register POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Register(Register model)
@@ -219,6 +249,7 @@ namespace PhoenixRising.Website.Controllers
             }
         }
         
+        //Login
         public ActionResult Login()
         {
             //if logged in, go to account page
@@ -269,6 +300,7 @@ namespace PhoenixRising.Website.Controllers
             }
         }
         
+        //Login POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Login(Login model)
@@ -338,6 +370,7 @@ namespace PhoenixRising.Website.Controllers
             }
         }
         
+        //Logout
         public ActionResult Logout()
         {
             HttpCookie accessToken = Request.Cookies.Get("AccessToken");

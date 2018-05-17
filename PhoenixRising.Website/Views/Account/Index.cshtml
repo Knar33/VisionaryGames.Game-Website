@@ -10,7 +10,25 @@
 {
     <div class="alert alert-danger">@TempData["Errors"]</div>
 }
+
 <br />
-Username: @ViewBag.userName
+Username: @Model.NICKNAME
+<br />
+Name: @Model.FIRST_NAME @Model.LAST_NAME
+<br />
+Email Address: @Model.EMAIL
 <br /><br />
+
+Currency 1: @Model.CURRENCY_AMOUNT
+<br />
+Currency 2: @Model.CURRENCY_AMOUNT_2
+<br />
+Level: @Model.LEVEL
+<br /><br />
+
+Developer: @Model.PERMISSIONS.Developer
+<br />
+Administrator: @Model.PERMISSIONS.Administrator
+<br /><br />
+
 @Html.ActionLink("Logout", "Logout", "Account")
