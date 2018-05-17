@@ -242,6 +242,26 @@ namespace PhoenixRising.Website.Controllers
 
                     if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
+                        Response.Cookies.Add(new HttpCookie("AccessToken")
+                        {
+                            Value = refreshResponse.access_token,
+                            HttpOnly = true,
+                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
+                        });
+
+                        Response.Cookies.Add(new HttpCookie("UserName")
+                        {
+                            Value = refreshResponse.user_nick,
+                            HttpOnly = true,
+                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
+                        });
+
+                        Response.Cookies.Add(new HttpCookie("UserID")
+                        {
+                            Value = refreshResponse.user_id,
+                            HttpOnly = true,
+                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
+                        });
                         return RedirectToAction("Index", "Account");
                     }
                 }
@@ -274,14 +294,14 @@ namespace PhoenixRising.Website.Controllers
                     {
                         Value = loginResponse.user_nick,
                         HttpOnly = true,
-                        Expires = DateTime.Now.AddYears(100)
+                        Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime
                     });
 
                     Response.Cookies.Add(new HttpCookie("UserID")
                     {
                         Value = loginResponse.user_id,
                         HttpOnly = true,
-                        Expires = DateTime.Now.AddYears(100)
+                        Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime
                     });
 
                     //only store refresh token if remember me is checked
