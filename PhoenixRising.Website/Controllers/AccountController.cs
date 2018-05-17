@@ -111,7 +111,7 @@ namespace PhoenixRising.Website.Controllers
                     throw e;
                 }
                 var bundle = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result;
-                ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, model.token, model.password);
+                ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, model.token, model.password1);
                 resetRequest.AppAccessToken = bundle.Value;
                 ResetPasswordResponse resetResponse = resetRequest.Send();
 
