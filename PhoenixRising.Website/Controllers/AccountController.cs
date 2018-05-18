@@ -141,7 +141,39 @@ namespace PhoenixRising.Website.Controllers
             model.token = token;
             return View(model);
         }
-        
+
+        //Verify email 
+        public ActionResult Verify(string token)
+        {
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            KeyVaultClient KeyVault;
+            try
+            {
+                var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
+                KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            var appAccessToken = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result.Value;
+
+            VerifyUserRequest verifyRequest = new VerifyUserRequest(connection, appAccessToken, token);
+            VerifyUserResponse verifyResponse = verifyRequest.Send();
+
+            if (verifyResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                TempData["Success"] = "You have successfully verified your email address. You can now login below.";
+            }
+            else
+            {
+                TempData["Errors"] = "There was an error processing your request.";
+            }
+
+            return RedirectToAction("Login", "Account");
+        }
+
         //Password POST
         [HttpPost]
         [ValidateAntiForgeryToken]
