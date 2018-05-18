@@ -395,6 +395,11 @@ namespace PhoenixRising.Website.Controllers
                     {
                         TempData["Errors"] = "Your email and password do not match. Please try again.";
                     }
+                    else if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotAcceptable)
+                    {
+                        //todo: add the link here
+                        TempData["Errors"] = "Your email is pending verification. Please check your email, or click [insert link here] to resend.";
+                    }
                     else
                     {
                         TempData["Errors"] = "There was an error processing your request. Please try again.";
