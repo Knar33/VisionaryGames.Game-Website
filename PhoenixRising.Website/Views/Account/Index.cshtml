@@ -1,4 +1,4 @@
-﻿
+﻿@model PhoenixRising.InternalAPI.Account.Account.GetUserDetailsResponse
 @{
     ViewBag.Title = "Account";
 }
@@ -10,6 +10,8 @@
 {
     <div class="alert alert-danger">@TempData["Errors"]</div>
 }
+
+@Html.ActionLink("Logout", "Logout", "Account")
 
 <br />
 Username: @Model.NICKNAME
@@ -31,4 +33,6 @@ Developer: @Model.PERMISSIONS.Developer
 Administrator: @Model.PERMISSIONS.Administrator
 <br /><br />
 
-@Html.ActionLink("Logout", "Logout", "Account")
+[Change basic info hidden box]<br /><br />
+[Change Email hidden box]<br /><br />
+[Change Password hidden box]<br /><br />
