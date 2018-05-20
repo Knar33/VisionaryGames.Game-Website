@@ -1,0 +1,43 @@
+﻿@model PhoenixRising.Website.Models.EditInfo
+@{
+    ViewBag.Title = "Edit Info";
+}
+
+<h2>Register</h2>
+
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Errors"] != null)
+{
+    <div class="alert alert-danger">@TempData["Errors"]</div>
+}
+
+@using (Html.BeginForm("EditInfo", "Account", FormMethod.Post, new { id = "Register-form" }))
+{
+    @Html.AntiForgeryToken();
+    <row>
+        <div class="col-md-12">
+            <h3>Edit basic info</h3>
+            <div class="form-group">
+                @Html.LabelFor(m => m.Nicknane, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.Nicknane, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.Nicknane)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.FirstName, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.FirstName)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.LastName, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.LastName, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.LastName)
+            </div>
+
+            <input type="submit" value="Submit" />
+        </div>
+    </row>
+}
