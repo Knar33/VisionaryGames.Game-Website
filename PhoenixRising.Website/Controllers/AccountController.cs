@@ -16,7 +16,6 @@ namespace PhoenixRising.Website.Controllers
     {
         //Index
         [CookieAuthentication]
-        [AuthorizeUser(AccessLevel="Unbanned")]
         public ActionResult Index()
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
@@ -72,27 +71,6 @@ namespace PhoenixRising.Website.Controllers
             return View(model);
         }
 
-        //Verify email 
-        public ActionResult Verify(string token)
-        {
-            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-            var appAccessToken = WebUtils.GetAppAccessToken();
-
-            VerifyUserRequest verifyRequest = new VerifyUserRequest(connection, appAccessToken, token);
-            VerifyUserResponse verifyResponse = verifyRequest.Send();
-
-            if (verifyResponse.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                TempData["Success"] = "You have successfully verified your email address. You can now login below.";
-            }
-            else
-            {
-                TempData["Errors"] = "There was an error processing your request.";
-            }
-
-            return RedirectToAction("Login", "Account");
-        }
-
         //Password POST
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -121,6 +99,27 @@ namespace PhoenixRising.Website.Controllers
             {
                 return View(model);
             }
+        }
+
+        //Verify email 
+        public ActionResult Verify(string token)
+        {
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var appAccessToken = WebUtils.GetAppAccessToken();
+
+            VerifyUserRequest verifyRequest = new VerifyUserRequest(connection, appAccessToken, token);
+            VerifyUserResponse verifyResponse = verifyRequest.Send();
+
+            if (verifyResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                TempData["Success"] = "You have successfully verified your email address. You can now login below.";
+            }
+            else
+            {
+                TempData["Errors"] = "There was an error processing your request.";
+            }
+
+            return RedirectToAction("Login", "Account");
         }
         
         //Register
@@ -297,6 +296,143 @@ namespace PhoenixRising.Website.Controllers
             }
 
             return RedirectToAction("Login", "Account");
+        }
+
+
+        //Edit Info
+        [CookieAuthentication]
+        public ActionResult EditInfo()
+        {
+            string accessToken = Request.Cookies.Get("AccessToken").Value;
+            Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+
+            GetUserDetailsRequest userDetailRequest = new GetUserDetailsRequest(connection, accessToken, userID);
+            GetUserDetailsResponse userDetailResponse = userDetailRequest.Send();
+
+            EditInfo model = new EditInfo()
+            {
+                Nicknane = userDetailResponse.NICKNAME,
+                FirstName = userDetailResponse.FIRST_NAME,
+                LastName = userDetailResponse.LAST_NAME,
+            };
+            return View(model);
+        }
+
+        //Edit Info POST
+        [HttpPost]
+        [CookieAuthentication]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditInfo(EditInfo model)
+        {
+            if (ModelState.IsValid)
+            {
+                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+                string accessToken = Request.Cookies.Get("AccessToken").Value;
+                Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
+
+                EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
+                request.FirstName = model.FirstName;
+                request.LastName = model.LastName;
+                request.Nicknane = model.Nicknane;
+
+                EditUserResponse response = request.Send();
+
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    TempData["Success"] = "You have successfully updated your info";
+                    return RedirectToAction("Index", "Account");
+                }
+                else
+                {
+                    TempData["Errors"] = "There was an error processing your request. Please try again.";
+                    return View(model);
+                }
+            }
+            else
+            {
+                return View(model);
+            }
+        }
+
+        //Edit Info
+        [CookieAuthentication]
+        public ActionResult ChangeEmail()
+        {
+            return View();
+        }
+
+        //Edit Info POST
+        [HttpPost]
+        [CookieAuthentication]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangeEmail(ChangeEmail model)
+        {
+            if (ModelState.IsValid)
+            {
+                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+                string accessToken = Request.Cookies.Get("AccessToken").Value;
+                Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
+
+                EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
+                request.Email = model.Email;
+                request.Password = model.password1;
+
+                EditUserResponse response = request.Send();
+
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    TempData["Success"] = "You have successfully updated your email. An email has been sent to the new address with instructions on how to verify the address change.";
+                    return RedirectToAction("Index", "Account");
+                }
+                else
+                {
+                    TempData["Errors"] = "There was an error processing your request. Please try again.";
+                    return View(model);
+                }
+            }
+            else
+            {
+                return View(model);
+            }
+        }
+
+        [CookieAuthentication]
+        public ActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        //Password POST
+        [HttpPost]
+        [CookieAuthentication]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangePassword(ChangePassword model)
+        {
+            if (ModelState.IsValid)
+            {
+                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+                string accessToken = Request.Cookies.Get("AccessToken").Value;
+                Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
+
+                ChangePasswordRequest resetRequest = new ChangePasswordRequest(connection, accessToken, userID, model.OldPassword, model.Password1);
+                ChangePasswordResponse resetResponse = resetRequest.Send();
+
+                if (resetResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    TempData["Success"] = "Your password was changed!";
+                    return RedirectToAction("Index", "Account");
+                }
+                else
+                {
+                    TempData["Errors"] = "There was an error processing your request";
+                    return View(model);
+                }
+            }
+            else
+            {
+                return View(model);
+            }
         }
     }
 }

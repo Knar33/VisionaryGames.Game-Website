@@ -11,7 +11,7 @@
     <div class="alert alert-danger">@TempData["Errors"]</div>
 }
 
-@Html.ActionLink("Logout", "Logout", "Account")
+@Html.ActionLink("Logout", "Logout", "Account") | @Html.ActionLink("Edit Basic Info", "EditInfo", "Account") | @Html.ActionLink("Change Email", "ChangeEmail", "Account") | @Html.ActionLink("Change Password", "ChangePassword", "Account")
 
 <br />
 Username: @Model.NICKNAME
@@ -32,7 +32,3 @@ Developer: @Model.PERMISSIONS.Developer
 <br />
 Administrator: @Model.PERMISSIONS.Administrator
 <br /><br />
-
-[Change basic info hidden box]<br /><br />
-[Change Email hidden box]<br /><br />
-[Change Password hidden box]<br /><br />
