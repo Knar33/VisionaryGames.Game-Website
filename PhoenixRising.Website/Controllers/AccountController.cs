@@ -11,86 +11,28 @@ using Microsoft.Azure.KeyVault;
 using PhoenixRising.InternalAPI;
 using PhoenixRising.InternalAPI.Authentication;
 using PhoenixRising.InternalAPI.Account.Account;
+using PhoenixRising.Website.Filters;
 
 namespace PhoenixRising.Website.Controllers
 {
     public class AccountController : Controller
     {
         //Index
+        [CookieAuthentication]
         public ActionResult Index()
         {
-            bool authenticated = false;
-            string accessToken = "";
-            string refreshToken = "";
-            Guid userID = new Guid();
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            GetUserDetailsRequest detailRequest = new GetUserDetailsRequest(connection, Request.Cookies.Get("AccessToken").Value, new Guid(Request.Cookies.Get("UserID").Value));
+            GetUserDetailsResponse model = detailRequest.Send();
 
-            //TODO: Make a filter for this auth shiz
-            HttpCookie accessTokenCookie = Request.Cookies.Get("AccessToken");
-            if (accessTokenCookie != null)
+            if (model.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                accessToken = accessTokenCookie.Value;
-                userID = new Guid(Request.Cookies.Get("UserID").Value);
-                authenticated = true;
+                return View(model);
             }
             else
             {
-                HttpCookie refreshTokenCookie = Request.Cookies.Get("RefreshToken");
-
-                if (refreshTokenCookie != null)
-                {
-                    refreshToken = refreshTokenCookie.Value;
-                    RefreshRequest refreshRequest = new RefreshRequest(connection, refreshToken);
-                    RefreshResponse refreshResponse = refreshRequest.Send();
-
-                    if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        Response.Cookies.Add(new HttpCookie("AccessToken")
-                        {
-                            Value = refreshResponse.access_token,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        Response.Cookies.Add(new HttpCookie("UserName")
-                        {
-                            Value = refreshResponse.user_nick,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        Response.Cookies.Add(new HttpCookie("UserID")
-                        {
-                            Value = refreshResponse.user_id,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        accessToken = refreshResponse.access_token;
-                        userID = new Guid(refreshResponse.user_id);
-                        authenticated = true;
-                    }
-                }
-            }
-
-            if (authenticated)
-            {
-                GetUserDetailsRequest detailRequest = new GetUserDetailsRequest(connection, accessToken, userID);
-                GetUserDetailsResponse model = detailRequest.Send();
-
-                if (model.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    return View(model);
-                }
-                else
-                {
-                    TempData["Errors"] = "There was an error processing your request";
-                    return View();
-                }
-            }
-            else
-            {
-                return RedirectToAction("Login", "Account");
+                TempData["Errors"] = "There was an error processing your request";
+                return View();
             }
         }
         
