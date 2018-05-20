@@ -12,6 +12,19 @@
     <div class="alert alert-danger">@TempData["Errors"]</div>
 }
 
+@if (TempData["Resend"] != null)
+{
+    using (Html.BeginForm("ResendValidation", "Account", FormMethod.Post, new { id = "Resend-form" }))
+    {
+        @Html.AntiForgeryToken();
+        @Html.Hidden("EmailResend", TempData["Resend"])
+        <div class="alert alert-danger">
+            Your email is pending verification.
+            <input type="submit" value="Resend Validation" />
+        </div>
+    }
+}
+
 @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { id = "Login-form" }))
 {
     @Html.AntiForgeryToken();

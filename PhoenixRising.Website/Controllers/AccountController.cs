@@ -240,7 +240,7 @@ namespace PhoenixRising.Website.Controllers
                     else if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotAcceptable)
                     {
                         //todo: add the link here
-                        TempData["Errors"] = "Your email is pending verification. Please check your email, or click [insert link here] to resend.";
+                        TempData["Resend"] = model.Email;
                     }
                     else
                     {
@@ -297,8 +297,7 @@ namespace PhoenixRising.Website.Controllers
 
             return RedirectToAction("Login", "Account");
         }
-
-
+        
         //Edit Info
         [CookieAuthentication]
         public ActionResult EditInfo()
@@ -397,13 +396,14 @@ namespace PhoenixRising.Website.Controllers
             }
         }
 
+        //Change Password
         [CookieAuthentication]
         public ActionResult ChangePassword()
         {
             return View();
         }
 
-        //Password POST
+        //Change Password POST
         [HttpPost]
         [CookieAuthentication]
         [ValidateAntiForgeryToken]
@@ -433,6 +433,15 @@ namespace PhoenixRising.Website.Controllers
             {
                 return View(model);
             }
+        }
+
+        //Resend Email Validation
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ResendValidation(Resend model)
+        {
+            TempData["Success"] = "There was not really an email sent, this is not yet implemented";
+            return RedirectToAction("Index", "Account");
         }
     }
 }
