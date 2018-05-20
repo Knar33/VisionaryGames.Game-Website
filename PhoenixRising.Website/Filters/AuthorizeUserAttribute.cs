@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using PhoenixRising.InternalAPI.Account.Account;
 using System.Configuration;
+using PhoenixRising.Website;
 
 namespace PhoenixRising.Website.Filters
 {

@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Mvc.Filters;
 using System.Configuration;
-using PhoenixRising.Website.Models;
-using PhoenixRising.InternalAPI.Website;
-using Microsoft.Azure.Services.AppAuthentication;
-using Microsoft.Azure.KeyVault;
-using PhoenixRising.InternalAPI;
 using PhoenixRising.InternalAPI.Authentication;
-using PhoenixRising.InternalAPI.Account.Account;
 using System.Web.Routing;
 
 namespace PhoenixRising.Website.Filters
