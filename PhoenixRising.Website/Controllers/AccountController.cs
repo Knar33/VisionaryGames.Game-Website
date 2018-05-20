@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using System.Configuration;
@@ -8,7 +6,6 @@ using PhoenixRising.Website.Models;
 using PhoenixRising.InternalAPI.Website;
 using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Azure.KeyVault;
-using PhoenixRising.InternalAPI;
 using PhoenixRising.InternalAPI.Authentication;
 using PhoenixRising.InternalAPI.Account.Account;
 using PhoenixRising.Website.Filters;
@@ -22,6 +19,7 @@ namespace PhoenixRising.Website.Controllers
         public ActionResult Index()
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+
             GetUserDetailsRequest detailRequest = new GetUserDetailsRequest(connection, Request.Cookies.Get("AccessToken").Value, new Guid(Request.Cookies.Get("UserID").Value));
             GetUserDetailsResponse model = detailRequest.Send();
 
@@ -50,18 +48,7 @@ namespace PhoenixRising.Website.Controllers
             if (ModelState.IsValid)
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                KeyVaultClient KeyVault;
-                try
-                {
-                    var azureServiceTokenProvider = new AzureServiceTokenProvider();
-                    var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
-                    KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
-                var appAccessToken = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result.Value;
+                var appAccessToken = WebUtils.GetAppAccessToken();
 
                 RequestResetPasswordRequest resetRequest = new RequestResetPasswordRequest(connection, appAccessToken, model.Email);
                 RequestResetPasswordResponse resetResponse = resetRequest.Send();
@@ -88,18 +75,7 @@ namespace PhoenixRising.Website.Controllers
         public ActionResult Verify(string token)
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-            KeyVaultClient KeyVault;
-            try
-            {
-                var azureServiceTokenProvider = new AzureServiceTokenProvider();
-                var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
-                KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
-            var appAccessToken = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result.Value;
+            var appAccessToken = WebUtils.GetAppAccessToken();
 
             VerifyUserRequest verifyRequest = new VerifyUserRequest(connection, appAccessToken, token);
             VerifyUserResponse verifyResponse = verifyRequest.Send();
@@ -124,20 +100,9 @@ namespace PhoenixRising.Website.Controllers
             if (ModelState.IsValid)
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                KeyVaultClient KeyVault;
-                try
-                {
-                    var azureServiceTokenProvider = new AzureServiceTokenProvider();
-                    var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
-                    KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
-                string appAccessKey = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result.Value;
+                var appAccessToken = WebUtils.GetAppAccessToken();
 
-                ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, appAccessKey, model.token, model.password1);
+                ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, appAccessToken, model.token, model.password1);
                 ResetPasswordResponse resetResponse = resetRequest.Send();
 
                 if (resetResponse.StatusCode == System.Net.HttpStatusCode.OK)
@@ -160,50 +125,7 @@ namespace PhoenixRising.Website.Controllers
         //Register
         public ActionResult Register()
         {
-            //if logged in, go to account page
-            HttpCookie accessToken = Request.Cookies.Get("AccessToken");
-            if (accessToken != null)
-            {
-                return RedirectToAction("Index", "Account");
-            }
-            else
-            {
-                HttpCookie refreshTokenCookie = Request.Cookies.Get("RefreshToken");
-                if (refreshTokenCookie != null)
-                {
-                    string refreshToken = refreshTokenCookie.Value;
-                    string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                    
-                    RefreshRequest refreshRequest = new RefreshRequest(connection, refreshToken);
-                    RefreshResponse refreshResponse = refreshRequest.Send();
-
-                    if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        Response.Cookies.Add(new HttpCookie("AccessToken")
-                        {
-                            Value = refreshResponse.access_token,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        Response.Cookies.Add(new HttpCookie("UserName")
-                        {
-                            Value = refreshResponse.user_nick,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        Response.Cookies.Add(new HttpCookie("UserID")
-                        {
-                            Value = refreshResponse.user_id,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-                        return RedirectToAction("Index", "Account");
-                    }
-                }
-                return View();
-            }
+            return View();
         }
         
         //Register POST
@@ -215,20 +137,9 @@ namespace PhoenixRising.Website.Controllers
             {
                 //Create user request
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                KeyVaultClient KeyVault;
-                try
-                {
-                    var azureServiceTokenProvider = new AzureServiceTokenProvider();
-                    var _token = azureServiceTokenProvider.GetAccessTokenAsync("https://vault.azure.net").Result;
-                    KeyVault = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
-                string appAccessKey = KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result.Value;
-                
-                CreateUserRequest request = new CreateUserRequest(connection, appAccessKey);
+                var appAccessToken = WebUtils.GetAppAccessToken();
+
+                CreateUserRequest request = new CreateUserRequest(connection, appAccessToken);
                 request.Email = model.Email;
                 request.FirstName = model.FirstName;
                 request.LastName = model.LastName;
@@ -266,50 +177,7 @@ namespace PhoenixRising.Website.Controllers
         //Login
         public ActionResult Login()
         {
-            //if logged in, go to account page
-            HttpCookie accessToken = Request.Cookies.Get("AccessToken");
-            if (accessToken != null)
-            {
-                return RedirectToAction("Index", "Account");
-            }
-            else
-            {
-                HttpCookie refreshTokenCookie = Request.Cookies.Get("RefreshToken");
-                if (refreshTokenCookie != null)
-                {
-                    string refreshToken = refreshTokenCookie.Value;
-                    string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-
-                    RefreshRequest refreshRequest = new RefreshRequest(connection, refreshToken);
-                    RefreshResponse refreshResponse = refreshRequest.Send();
-
-                    if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        Response.Cookies.Add(new HttpCookie("AccessToken")
-                        {
-                            Value = refreshResponse.access_token,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        Response.Cookies.Add(new HttpCookie("UserName")
-                        {
-                            Value = refreshResponse.user_nick,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        Response.Cookies.Add(new HttpCookie("UserID")
-                        {
-                            Value = refreshResponse.user_id,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-                        return RedirectToAction("Index", "Account");
-                    }
-                }
-                return View();
-            }
+            return View();
         }
         
         //Login POST
