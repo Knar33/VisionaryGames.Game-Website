@@ -16,6 +16,7 @@ namespace PhoenixRising.Website.Controllers
     {
         //Index
         [CookieAuthentication]
+        [AuthorizeUser(AccessLevel="Unbanned")]
         public ActionResult Index()
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];

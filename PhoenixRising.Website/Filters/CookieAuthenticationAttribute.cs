@@ -17,8 +17,7 @@ namespace PhoenixRising.Website.Filters
             string refreshToken = "";
             Guid userID = new Guid();
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-
-            //TODO: Make a filter for this auth shiz
+            
             HttpCookie accessTokenCookie = filterContext.HttpContext.Request.Cookies.Get("AccessToken");
             if (accessTokenCookie != null)
             {
