@@ -14,8 +14,8 @@ namespace PhoenixRising.Website.Filters
         public override void OnAuthorization(AuthorizationContext filterContext)
         {
             var request = filterContext.HttpContext.Request;
-            var url = new UrlHelper(filterContext.RequestContext);
-            var accessDeniedUrl = url.Action("Index", "Home");
+            UrlHelper url = new UrlHelper(filterContext.RequestContext);
+            string accessDeniedUrl = url.Action("Index", "Home");
 
             string accessToken = filterContext.HttpContext.Request.Cookies.Get("AccessToken").Value;
             Guid userID = new Guid(filterContext.HttpContext.Request.Cookies.Get("UserID").Value);
@@ -29,13 +29,13 @@ namespace PhoenixRising.Website.Filters
             {
                 privilegeLevels.Add("Administrator");
             }
-            if (userDetailResponse.PERMISSIONS.Banned)
-            {
-                privilegeLevels.Add("Banned");
-            }
             if (userDetailResponse.PERMISSIONS.Developer)
             {
                 privilegeLevels.Add("Developer");
+            }
+            if (!userDetailResponse.PERMISSIONS.Banned)
+            {
+                privilegeLevels.Add("Unbanned");
             }
 
             if (!privilegeLevels.Contains(AccessLevel))
