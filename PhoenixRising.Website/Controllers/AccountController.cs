@@ -19,7 +19,7 @@ namespace PhoenixRising.Website.Controllers
 {
     public class AccountController : Controller
     {
-        [Authorize]
+        [CookieAuthentication]
         public ActionResult Index()
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
@@ -215,7 +215,7 @@ namespace PhoenixRising.Website.Controllers
                         claims.Add(new Claim(ClaimTypes.Name, loginResponse.user_nick));
                         claims.Add(new Claim(ClaimTypes.NameIdentifier, loginResponse.user_id));
                         claims.Add(new Claim("ExpiresTime", loginResponse.expireTime));
-                        claims.Add(new Claim("RefreshToken", loginResponse.access_token));
+                        claims.Add(new Claim("RefreshToken", loginResponse.refresh_token));
                         if (userDetailResponse.PERMISSIONS.Administrator)
                         {
                             claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
@@ -229,7 +229,7 @@ namespace PhoenixRising.Website.Controllers
                         var ctx = Request.GetOwinContext();
                         var authenticationManager = ctx.Authentication;
                         var properties = new AuthenticationProperties { IsPersistent = model.RememberMe };
-                        authenticationManager.SignIn(id);
+                        authenticationManager.SignIn(properties, id);
 
                         //redirect to register success, login success
                         TempData["Success"] = "You have successfully signed in!";
@@ -335,8 +335,7 @@ namespace PhoenixRising.Website.Controllers
         }
 
         //Edit Info
-        [Authorize]
-        [Authorize(Roles = "Developer")]
+        [AuthorizeUser(Roles = "Developer")]
         public ActionResult ChangeEmail()
         {
             return View();

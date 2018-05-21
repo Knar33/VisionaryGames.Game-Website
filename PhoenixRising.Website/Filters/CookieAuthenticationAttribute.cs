@@ -5,6 +5,8 @@ using System.Web.Mvc.Filters;
 using System.Configuration;
 using PhoenixRising.InternalAPI.Authentication;
 using System.Web.Routing;
+using System.Security.Claims;
+using System.Linq;
 
 namespace PhoenixRising.Website.Filters
 {
@@ -13,53 +15,28 @@ namespace PhoenixRising.Website.Filters
         public void OnAuthentication(AuthenticationContext filterContext)
         {
             bool authenticated = false;
-            string accessToken = "";
-            string refreshToken = "";
-            Guid userID = new Guid();
-            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-            
-            HttpCookie accessTokenCookie = filterContext.HttpContext.Request.Cookies.Get("AccessToken");
-            if (accessTokenCookie != null)
-            {
-                accessToken = accessTokenCookie.Value;
-                userID = new Guid(filterContext.HttpContext.Request.Cookies.Get("UserID").Value);
-                authenticated = true;
-            }
-            else
-            {
-                HttpCookie refreshTokenCookie = filterContext.HttpContext.Request.Cookies.Get("RefreshToken");
+            var user = filterContext.HttpContext.User as ClaimsPrincipal;
+            var identity = new ClaimsIdentity(user.Identity);
 
-                if (refreshTokenCookie != null)
+            if (user != null)
+            {
+                DateTime expiresTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(user.Claims.FirstOrDefault(x => x.Type == "ExpiresTime").Value)).LocalDateTime;
+
+                if (expiresTime > DateTime.Now)
                 {
-                    refreshToken = refreshTokenCookie.Value;
+                    string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+                    string refreshToken = user.Claims.FirstOrDefault(x => x.Type == "RefreshToken").Value;
                     RefreshRequest refreshRequest = new RefreshRequest(connection, refreshToken);
                     RefreshResponse refreshResponse = refreshRequest.Send();
 
                     if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        filterContext.HttpContext.Response.Cookies.Add(new HttpCookie("AccessToken")
-                        {
-                            Value = refreshResponse.access_token,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        filterContext.HttpContext.Response.Cookies.Add(new HttpCookie("UserName")
-                        {
-                            Value = refreshResponse.user_nick,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        filterContext.HttpContext.Response.Cookies.Add(new HttpCookie("UserID")
-                        {
-                            Value = refreshResponse.user_id,
-                            HttpOnly = true,
-                            Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(refreshResponse.expireTime)).LocalDateTime
-                        });
-
-                        accessToken = refreshResponse.access_token;
-                        userID = new Guid(refreshResponse.user_id);
+                        identity.RemoveClaim(identity.FindFirst("AccessToken"));
+                        identity.RemoveClaim(identity.FindFirst("ExpiresTime"));
+                        identity.RemoveClaim(identity.FindFirst(ClaimTypes.Name));
+                        identity.AddClaim(new Claim("AccessToken", refreshResponse.access_token));
+                        identity.AddClaim(new Claim("ExpiresTime", refreshResponse.expireTime));
+                        identity.AddClaim(new Claim(ClaimTypes.Name, refreshResponse.user_nick));
                         authenticated = true;
                     }
                 }
@@ -67,10 +44,7 @@ namespace PhoenixRising.Website.Filters
 
             if (!authenticated)
             {
-                filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary{
-                    { "controller", "Account" },
-                    { "action", "Login" }
-                });
+                filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary{{ "controller", "Account" }, { "action", "Login" }});
             }
         }
 
