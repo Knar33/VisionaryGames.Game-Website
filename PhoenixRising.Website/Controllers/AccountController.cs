@@ -12,18 +12,23 @@ using PhoenixRising.Website.Filters;
 using System.Security.Claims;
 using Microsoft.AspNet.Identity;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Owin.Security;
 
 namespace PhoenixRising.Website.Controllers
 {
     public class AccountController : Controller
     {
-        //Index
-        [CookieAuthentication]
+        [Authorize]
         public ActionResult Index()
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var ctx = Request.GetOwinContext();
+            ClaimsPrincipal user = ctx.Authentication.User;
+            string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
+            string userID = user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value;
 
-            GetUserDetailsRequest detailRequest = new GetUserDetailsRequest(connection, Request.Cookies.Get("AccessToken").Value, new Guid(Request.Cookies.Get("UserID").Value));
+            GetUserDetailsRequest detailRequest = new GetUserDetailsRequest(connection, accessToken, new Guid(userID));
             GetUserDetailsResponse model = detailRequest.Send();
 
             if (model.StatusCode == System.Net.HttpStatusCode.OK)
@@ -198,26 +203,43 @@ namespace PhoenixRising.Website.Controllers
 
                 if (loginResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    var claims = new List<Claim>();
-                    claims.Add(new Claim("AccessToken", loginResponse.access_token));
-                    claims.Add(new Claim("UserName", loginResponse.user_nick));
-                    claims.Add(new Claim("UserID", loginResponse.user_id));
-                    claims.Add(new Claim("ExpiresTime", DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime.ToLongDateString()));
+                    string accessToken = loginResponse.access_token;
+                    Guid userID = new Guid(loginResponse.user_id);
 
-                    //only store refresh token if remember me is checked
-                    if (model.RememberMe)
+                    GetUserDetailsRequest userDetailRequest = new GetUserDetailsRequest(connection, accessToken, userID);
+                    GetUserDetailsResponse userDetailResponse = userDetailRequest.Send();
+                    if (userDetailResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
+                        var claims = new List<Claim>();
+                        claims.Add(new Claim("AccessToken", loginResponse.access_token));
+                        claims.Add(new Claim(ClaimTypes.Name, loginResponse.user_nick));
+                        claims.Add(new Claim(ClaimTypes.NameIdentifier, loginResponse.user_id));
+                        claims.Add(new Claim("ExpiresTime", DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime.ToLongDateString()));
                         claims.Add(new Claim("RefreshToken", loginResponse.access_token));
+                        if (userDetailResponse.PERMISSIONS.Administrator)
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
+                        }
+                        if (userDetailResponse.PERMISSIONS.Developer)
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role, "Developer"));
+                        }
+
+                        var id = new ClaimsIdentity(claims, DefaultAuthenticationTypes.ApplicationCookie);
+                        var ctx = Request.GetOwinContext();
+                        var authenticationManager = ctx.Authentication;
+                        var properties = new AuthenticationProperties { IsPersistent = model.RememberMe };
+                        authenticationManager.SignIn(id);
+
+                        //redirect to register success, login success
+                        TempData["Success"] = "You have successfully signed in!";
+                        return RedirectToAction("Index", "Account");
+                    }    
+                    else
+                    {
+                        TempData["Errors"] = "There was an error processing your request.";
+                        return View(model);
                     }
-
-                    var id = new ClaimsIdentity(claims, DefaultAuthenticationTypes.ApplicationCookie);
-                    var ctx = Request.GetOwinContext();
-                    var authenticationManager = ctx.Authentication;
-                    authenticationManager.SignIn(id);
-
-                    //redirect to register success, login success
-                    TempData["Success"] = "You have successfully signed in!";
-                    return RedirectToAction("Index", "Account");
                 }
                 else
                 {
@@ -245,55 +267,24 @@ namespace PhoenixRising.Website.Controllers
         //Logout
         public ActionResult Logout()
         {
-            HttpCookie accessToken = Request.Cookies.Get("AccessToken");
-            if (accessToken != null)
-            {
-                //delete cookies
-                accessToken = new HttpCookie("AccessToken");
-                accessToken.Expires = DateTime.Now.AddDays(-1d);
-                Response.Cookies.Add(accessToken);
-                TempData["Success"] = "You have logged out!";
-            }
-
-            HttpCookie userName = Request.Cookies.Get("UserName");
-            if (userName != null)
-            {
-                //delete cookies
-                userName = new HttpCookie("UserName");
-                userName.Expires = DateTime.Now.AddDays(-1d);
-                Response.Cookies.Add(userName);
-            }
-
-            HttpCookie userID = Request.Cookies.Get("UserID");
-            if (userID != null)
-            {
-                //delete cookies
-                userID = new HttpCookie("UserID");
-                userID.Expires = DateTime.Now.AddDays(-1d);
-                Response.Cookies.Add(userID);
-            }
-
-            HttpCookie refreshToken = Request.Cookies.Get("RefreshToken");
-            if (refreshToken != null)
-            {
-                //delete cookies
-                refreshToken = new HttpCookie("RefreshToken");
-                refreshToken.Expires = DateTime.Now.AddDays(-1d);
-                Response.Cookies.Add(refreshToken);
-            }
+            var ctx = Request.GetOwinContext();
+            var authenticationManager = ctx.Authentication;
+            authenticationManager.SignOut();
 
             return RedirectToAction("Login", "Account");
         }
         
         //Edit Info
-        [CookieAuthentication]
+        [Authorize]
         public ActionResult EditInfo()
         {
-            string accessToken = Request.Cookies.Get("AccessToken").Value;
-            Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var ctx = Request.GetOwinContext();
+            ClaimsPrincipal user = ctx.Authentication.User;
+            string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
+            string userID = user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value;
 
-            GetUserDetailsRequest userDetailRequest = new GetUserDetailsRequest(connection, accessToken, userID);
+            GetUserDetailsRequest userDetailRequest = new GetUserDetailsRequest(connection, accessToken, new Guid(userID));
             GetUserDetailsResponse userDetailResponse = userDetailRequest.Send();
 
             EditInfo model = new EditInfo()
@@ -307,15 +298,17 @@ namespace PhoenixRising.Website.Controllers
 
         //Edit Info POST
         [HttpPost]
-        [CookieAuthentication]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public ActionResult EditInfo(EditInfo model)
         {
             if (ModelState.IsValid)
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                string accessToken = Request.Cookies.Get("AccessToken").Value;
-                Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
+                var ctx = Request.GetOwinContext();
+                ClaimsPrincipal user = ctx.Authentication.User;
+                string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
+                Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
 
                 EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
                 request.FirstName = model.FirstName;
@@ -342,7 +335,7 @@ namespace PhoenixRising.Website.Controllers
         }
 
         //Edit Info
-        [CookieAuthentication]
+        [Authorize]
         public ActionResult ChangeEmail()
         {
             return View();
@@ -350,15 +343,17 @@ namespace PhoenixRising.Website.Controllers
 
         //Edit Info POST
         [HttpPost]
-        [CookieAuthentication]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public ActionResult ChangeEmail(ChangeEmail model)
         {
             if (ModelState.IsValid)
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                string accessToken = Request.Cookies.Get("AccessToken").Value;
-                Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
+                var ctx = Request.GetOwinContext();
+                ClaimsPrincipal user = ctx.Authentication.User;
+                string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
+                Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
 
                 EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
                 request.Email = model.Email;
@@ -384,7 +379,7 @@ namespace PhoenixRising.Website.Controllers
         }
 
         //Change Password
-        [CookieAuthentication]
+        [Authorize]
         public ActionResult ChangePassword()
         {
             return View();
@@ -392,15 +387,17 @@ namespace PhoenixRising.Website.Controllers
 
         //Change Password POST
         [HttpPost]
-        [CookieAuthentication]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public ActionResult ChangePassword(ChangePassword model)
         {
             if (ModelState.IsValid)
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                string accessToken = Request.Cookies.Get("AccessToken").Value;
-                Guid userID = new Guid(Request.Cookies.Get("UserID").Value);
+                var ctx = Request.GetOwinContext();
+                ClaimsPrincipal user = ctx.Authentication.User;
+                string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
+                Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
 
                 ChangePasswordRequest resetRequest = new ChangePasswordRequest(connection, accessToken, userID, model.OldPassword, model.Password1);
                 ChangePasswordResponse resetResponse = resetRequest.Send();
