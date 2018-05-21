@@ -30,6 +30,7 @@ namespace PhoenixRising.Website.Filters
 
                     if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
+                        //TODO: This doesn't work
                         identity.RemoveClaim(identity.FindFirst("AccessToken"));
                         identity.RemoveClaim(identity.FindFirst("ExpiresTime"));
                         identity.RemoveClaim(identity.FindFirst(ClaimTypes.Name));
