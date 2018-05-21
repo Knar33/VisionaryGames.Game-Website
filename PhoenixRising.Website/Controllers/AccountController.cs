@@ -214,7 +214,7 @@ namespace PhoenixRising.Website.Controllers
                         claims.Add(new Claim("AccessToken", loginResponse.access_token));
                         claims.Add(new Claim(ClaimTypes.Name, loginResponse.user_nick));
                         claims.Add(new Claim(ClaimTypes.NameIdentifier, loginResponse.user_id));
-                        claims.Add(new Claim("ExpiresTime", DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime.ToLongDateString()));
+                        claims.Add(new Claim("ExpiresTime", loginResponse.expireTime));
                         claims.Add(new Claim("RefreshToken", loginResponse.access_token));
                         if (userDetailResponse.PERMISSIONS.Administrator)
                         {
@@ -336,6 +336,7 @@ namespace PhoenixRising.Website.Controllers
 
         //Edit Info
         [Authorize]
+        [Authorize(Roles = "Developer")]
         public ActionResult ChangeEmail()
         {
             return View();
@@ -343,7 +344,6 @@ namespace PhoenixRising.Website.Controllers
 
         //Edit Info POST
         [HttpPost]
-        [Authorize]
         [ValidateAntiForgeryToken]
         public ActionResult ChangeEmail(ChangeEmail model)
         {
