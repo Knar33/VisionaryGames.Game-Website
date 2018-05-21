@@ -315,6 +315,8 @@ namespace PhoenixRising.Website.Controllers
                 request.LastName = model.LastName;
                 request.Nicknane = model.Nicknane;
 
+                //TODO: If Nickname is changed, change it in the user claim
+
                 EditUserResponse response = request.Send();
 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
