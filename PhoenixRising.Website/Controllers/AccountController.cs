@@ -9,6 +9,9 @@ using Microsoft.Azure.KeyVault;
 using PhoenixRising.InternalAPI.Authentication;
 using PhoenixRising.InternalAPI.Account.Account;
 using PhoenixRising.Website.Filters;
+using System.Security.Claims;
+using Microsoft.AspNet.Identity;
+using System.Collections.Generic;
 
 namespace PhoenixRising.Website.Controllers
 {
@@ -195,37 +198,22 @@ namespace PhoenixRising.Website.Controllers
 
                 if (loginResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    Response.Cookies.Add(new HttpCookie("AccessToken")
-                    {
-                        Value = loginResponse.access_token,
-                        HttpOnly = true,
-                        Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime
-                    });
-
-                    Response.Cookies.Add(new HttpCookie("UserName")
-                    {
-                        Value = loginResponse.user_nick,
-                        HttpOnly = true,
-                        Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime
-                    });
-
-                    Response.Cookies.Add(new HttpCookie("UserID")
-                    {
-                        Value = loginResponse.user_id,
-                        HttpOnly = true,
-                        Expires = DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime
-                    });
+                    var claims = new List<Claim>();
+                    claims.Add(new Claim("AccessToken", loginResponse.access_token));
+                    claims.Add(new Claim("UserName", loginResponse.user_nick));
+                    claims.Add(new Claim("UserID", loginResponse.user_id));
+                    claims.Add(new Claim("ExpiresTime", DateTimeOffset.FromUnixTimeSeconds(long.Parse(loginResponse.expireTime)).LocalDateTime.ToLongDateString()));
 
                     //only store refresh token if remember me is checked
                     if (model.RememberMe)
                     {
-                        Response.Cookies.Add(new HttpCookie("RefreshToken")
-                        {
-                            Value = loginResponse.refresh_token,
-                            HttpOnly = true,
-                            Expires = DateTime.Now.AddDays(60)
-                        });
+                        claims.Add(new Claim("RefreshToken", loginResponse.access_token));
                     }
+
+                    var id = new ClaimsIdentity(claims, DefaultAuthenticationTypes.ApplicationCookie);
+                    var ctx = Request.GetOwinContext();
+                    var authenticationManager = ctx.Authentication;
+                    authenticationManager.SignIn(id);
 
                     //redirect to register success, login success
                     TempData["Success"] = "You have successfully signed in!";
@@ -239,7 +227,6 @@ namespace PhoenixRising.Website.Controllers
                     }
                     else if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotAcceptable)
                     {
-                        //todo: add the link here
                         TempData["Resend"] = model.Email;
                     }
                     else
