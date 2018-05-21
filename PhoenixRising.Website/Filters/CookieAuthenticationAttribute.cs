@@ -14,7 +14,6 @@ namespace PhoenixRising.Website.Filters
     {
         public void OnAuthentication(AuthenticationContext filterContext)
         {
-            bool authenticated = false;
             var user = filterContext.HttpContext.User as ClaimsPrincipal;
             var identity = new ClaimsIdentity(user.Identity);
 
@@ -22,7 +21,7 @@ namespace PhoenixRising.Website.Filters
             {
                 DateTime expiresTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(user.Claims.FirstOrDefault(x => x.Type == "ExpiresTime").Value)).LocalDateTime;
 
-                if (expiresTime > DateTime.Now)
+                if (expiresTime < DateTime.Now)
                 {
                     string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
                     string refreshToken = user.Claims.FirstOrDefault(x => x.Type == "RefreshToken").Value;
@@ -37,12 +36,10 @@ namespace PhoenixRising.Website.Filters
                         identity.AddClaim(new Claim("AccessToken", refreshResponse.access_token));
                         identity.AddClaim(new Claim("ExpiresTime", refreshResponse.expireTime));
                         identity.AddClaim(new Claim(ClaimTypes.Name, refreshResponse.user_nick));
-                        authenticated = true;
                     }
                 }
             }
-
-            if (!authenticated)
+            else
             {
                 filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary{{ "controller", "Account" }, { "action", "Login" }});
             }

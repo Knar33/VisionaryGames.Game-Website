@@ -3,9 +3,6 @@
     ViewBag.Title = "Register";
 }
 
-<h2>Register</h2>
-
-
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">@TempData["Success"]</div>
@@ -14,6 +11,7 @@
 {
     <div class="alert alert-danger">@TempData["Errors"]</div>
 }
+
 @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { id = "Register-form" }))
 {
     @Html.AntiForgeryToken();

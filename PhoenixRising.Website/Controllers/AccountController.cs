@@ -275,7 +275,7 @@ namespace PhoenixRising.Website.Controllers
         }
         
         //Edit Info
-        [Authorize]
+        [CookieAuthentication]
         public ActionResult EditInfo()
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
@@ -298,7 +298,7 @@ namespace PhoenixRising.Website.Controllers
 
         //Edit Info POST
         [HttpPost]
-        [Authorize]
+        [CookieAuthentication]
         [ValidateAntiForgeryToken]
         public ActionResult EditInfo(EditInfo model)
         {
@@ -380,7 +380,7 @@ namespace PhoenixRising.Website.Controllers
         }
 
         //Change Password
-        [Authorize]
+        [CookieAuthentication]
         public ActionResult ChangePassword()
         {
             return View();
@@ -388,7 +388,7 @@ namespace PhoenixRising.Website.Controllers
 
         //Change Password POST
         [HttpPost]
-        [Authorize]
+        [CookieAuthentication]
         [ValidateAntiForgeryToken]
         public ActionResult ChangePassword(ChangePassword model)
         {
