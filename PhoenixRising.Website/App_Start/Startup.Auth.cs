@@ -4,7 +4,8 @@ using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
 using Owin;
 
-namespace WebApplication4
+[assembly: OwinStartupAttribute(typeof(PhoenixRising.Website.Startup))]
+namespace PhoenixRising.Website
 {
     public partial class Startup
     {
@@ -19,7 +20,6 @@ namespace WebApplication4
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
                 LoginPath = new PathString("/Account/Login"),
-                CookieSecure = CookieSecureOption.Always,
                 ExpireTimeSpan = TimeSpan.FromDays(30)
             });
         }
