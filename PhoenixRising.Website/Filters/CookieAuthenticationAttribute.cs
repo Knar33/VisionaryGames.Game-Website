@@ -16,6 +16,7 @@ namespace PhoenixRising.Website.Filters
     {
         public void OnAuthentication(AuthenticationContext filterContext)
         {
+            //Get current user
             var user = filterContext.HttpContext.User as ClaimsPrincipal;
             var identity = new ClaimsIdentity(user.Identity);
 
@@ -26,7 +27,7 @@ namespace PhoenixRising.Website.Filters
                 if (expiresTime < DateTime.Now)
                 {
                     string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                    string refreshToken = user.Claims.FirstOrDefault(x => x.Type == "RefreshToken").Value;
+                    string refreshToken = identity.FindFirst("RefreshToken").Value;
 
                     RefreshRequest refreshRequest = new RefreshRequest(connection, refreshToken);
                     RefreshResponse refreshResponse = refreshRequest.Send();
@@ -59,9 +60,14 @@ namespace PhoenixRising.Website.Filters
                         {
                             identity.AddClaim(new Claim(ClaimTypes.Role, "Developer"));
                         }
-
+                        
                         var authenticationManager = filterContext.HttpContext.GetOwinContext().Authentication;
-                        authenticationManager.AuthenticationResponseGrant = new AuthenticationResponseGrant(new ClaimsPrincipal(identity), new AuthenticationProperties() { IsPersistent = Convert.ToBoolean(identity.FindFirst(ClaimTypes.IsPersistent).Value) });
+                        authenticationManager.SignOut();
+                        var properties = new AuthenticationProperties { IsPersistent = Convert.ToBoolean(identity.FindFirst(ClaimTypes.IsPersistent).Value) };
+                        authenticationManager.SignIn(properties, identity);
+                        
+                        var claimsPrincipal = new ClaimsPrincipal(identity);
+                        filterContext.HttpContext.User = claimsPrincipal;
                     }
                     else
                     {

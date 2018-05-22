@@ -1,0 +1,42 @@
+﻿@model PhoenixRising.Website.Models.UpdatePermissions
+@{
+    ViewBag.Title = "UpdatePermissions";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Errors"] != null)
+{
+    <div class="alert alert-danger">@TempData["Errors"]</div>
+}
+
+@using (Html.BeginForm("UpdatePermissions", "Admin", FormMethod.Post, new { id = "Register-form" }))
+{
+    @Html.AntiForgeryToken();
+    <row>
+        <div class="col-md-12">
+            <h3>Update User</h3>
+            <div class="form-group">
+                @Html.LabelFor(m => m.UserName, new { @class = "control-label" })
+                @Html.TextBoxFor(m => m.UserName, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.UserName)
+            </div>
+            <div class="form-group">
+                @Html.CheckBoxFor(m => m.Administrator)
+                @Html.LabelFor(m => m.Administrator)
+            </div>
+            <div class="form-group">
+                @Html.CheckBoxFor(m => m.Developer)
+                @Html.LabelFor(m => m.Developer)
+            </div>
+            <div class="form-group">
+                @Html.CheckBoxFor(m => m.Banned)
+                @Html.LabelFor(m => m.Banned)
+            </div>
+
+            <input type="submit" value="Submit" />
+        </div>
+    </row>
+}
