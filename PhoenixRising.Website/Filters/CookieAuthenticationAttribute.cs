@@ -17,10 +17,10 @@ namespace PhoenixRising.Website.Filters
         public void OnAuthentication(AuthenticationContext filterContext)
         {
             //Get current user
-            var user = filterContext.HttpContext.User as ClaimsPrincipal;
-            var identity = new ClaimsIdentity(user.Identity);
+            ClaimsPrincipal user = filterContext.HttpContext.User as ClaimsPrincipal;
+            ClaimsIdentity identity = new ClaimsIdentity(user.Identity);
 
-            if (user != null && user.Identity.IsAuthenticated)
+            if (user != null && identity.IsAuthenticated)
             {
                 DateTime expiresTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(identity.FindFirst(ClaimTypes.Expiration).Value)).LocalDateTime;
 
@@ -64,10 +64,11 @@ namespace PhoenixRising.Website.Filters
                         
                         var authenticationManager = filterContext.HttpContext.GetOwinContext().Authentication;
                         authenticationManager.SignOut();
-                        var properties = new AuthenticationProperties { IsPersistent = Convert.ToBoolean(identity.FindFirst(ClaimTypes.IsPersistent).Value) };
+
+                        AuthenticationProperties properties = new AuthenticationProperties { IsPersistent = Convert.ToBoolean(identity.FindFirst(ClaimTypes.IsPersistent).Value) };
                         authenticationManager.SignIn(properties, identity);
-                        
-                        var claimsPrincipal = new ClaimsPrincipal(identity);
+
+                        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
                         filterContext.HttpContext.User = claimsPrincipal;
                     }
                     else
