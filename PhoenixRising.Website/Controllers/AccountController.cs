@@ -23,10 +23,9 @@ namespace PhoenixRising.Website.Controllers
         public ActionResult Index()
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-            var ctx = Request.GetOwinContext();
-            ClaimsPrincipal user = ctx.Authentication.User;
-            string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
-            string userID = user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value;
+            ClaimsIdentity identity = new ClaimsIdentity(Request.GetOwinContext().Authentication.User.Identity);
+            string accessToken = identity.FindFirst("AccessToken").Value;
+            string userID = identity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
             GetUserDetailsRequest detailRequest = new GetUserDetailsRequest(connection, accessToken, new Guid(userID));
             GetUserDetailsResponse model = detailRequest.Send();
@@ -210,13 +209,13 @@ namespace PhoenixRising.Website.Controllers
                     GetUserDetailsResponse userDetailResponse = userDetailRequest.Send();
                     if (userDetailResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        var claims = new List<Claim>();
+                        List<Claim> claims = new List<Claim>();
                         claims.Add(new Claim("AccessToken", loginResponse.access_token));
+                        claims.Add(new Claim("RefreshToken", loginResponse.refresh_token));
                         claims.Add(new Claim(ClaimTypes.Name, loginResponse.user_nick));
                         claims.Add(new Claim(ClaimTypes.NameIdentifier, loginResponse.user_id));
                         claims.Add(new Claim(ClaimTypes.Expiration, loginResponse.expireTime));
                         claims.Add(new Claim(ClaimTypes.IsPersistent, model.RememberMe.ToString()));
-                        claims.Add(new Claim("RefreshToken", loginResponse.refresh_token));
                         if (userDetailResponse.PERMISSIONS.Administrator)
                         {
                             claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
@@ -226,10 +225,10 @@ namespace PhoenixRising.Website.Controllers
                             claims.Add(new Claim(ClaimTypes.Role, "Developer"));
                         }
 
-                        var id = new ClaimsIdentity(claims, DefaultAuthenticationTypes.ApplicationCookie);
-                        var ctx = Request.GetOwinContext();
-                        var authenticationManager = ctx.Authentication;
-                        var properties = new AuthenticationProperties { IsPersistent = model.RememberMe };
+                        ClaimsIdentity id = new ClaimsIdentity(claims, DefaultAuthenticationTypes.ApplicationCookie);
+                        var authenticationManager = Request.GetOwinContext().Authentication;
+
+                        AuthenticationProperties properties = new AuthenticationProperties { IsPersistent = model.RememberMe };
                         authenticationManager.SignIn(properties, id);
 
                         //redirect to register success, login success
