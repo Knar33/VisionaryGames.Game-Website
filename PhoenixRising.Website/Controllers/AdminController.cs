@@ -51,6 +51,9 @@ namespace PhoenixRising.Website.Controllers
                 if (findResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     UpdateUserPermissionsRequest updateUserRequest = new UpdateUserPermissionsRequest(connection, accessToken, new Guid(findResponse.USER_ID));
+                    updateUserRequest.Administrator = model.Administrator ? 1 : 0;
+                    updateUserRequest.Developer = model.Developer ? 1 : 0;
+                    updateUserRequest.Banned = model.Banned ? 1 : 0;
                     UpdateUserPermissionsResponse updateUserResponse = updateUserRequest.Send();
 
                     if (updateUserResponse.StatusCode == System.Net.HttpStatusCode.OK)
