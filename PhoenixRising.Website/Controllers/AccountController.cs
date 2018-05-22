@@ -442,8 +442,19 @@ namespace PhoenixRising.Website.Controllers
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
             var appAccessToken = WebUtils.GetAppAccessToken();
 
-            TempData["Success"] = "There was not really an email sent, this is not yet implemented";
-            return RedirectToAction("Index", "Account");
+            ResendVerificationRequest resendRequest = new ResendVerificationRequest(connection, appAccessToken, model.EmailResend);
+            ResendVerificationResponse resendResponse = resendRequest.Send();
+
+            if (resendResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                TempData["Success"] = "Another verification email was sent.";
+                return RedirectToAction("Index", "Account");
+            }
+            else
+            {
+                TempData["Errors"] = "There was an error processing your request";
+                return RedirectToAction("Index", "Account");
+            }
         }
     }
 }
