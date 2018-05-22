@@ -22,7 +22,7 @@ namespace PhoenixRising.Website.Filters
 
             if (user != null && user.Identity.IsAuthenticated)
             {
-                DateTime expiresTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Expiration).Value)).LocalDateTime;
+                DateTime expiresTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(identity.FindFirst(ClaimTypes.Expiration).Value)).LocalDateTime;
 
                 if (expiresTime < DateTime.Now)
                 {
@@ -37,6 +37,7 @@ namespace PhoenixRising.Website.Filters
 
                     if (refreshResponse.StatusCode == System.Net.HttpStatusCode.OK && userDetailResponse.StatusCode == System.Net.HttpStatusCode.OK)
                     {
+                        //Update the user's claims
                         identity.RemoveClaim(identity.FindFirst("AccessToken"));
                         identity.RemoveClaim(identity.FindFirst(ClaimTypes.Expiration));
                         identity.RemoveClaim(identity.FindFirst(ClaimTypes.Name));
