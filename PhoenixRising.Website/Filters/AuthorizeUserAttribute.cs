@@ -20,10 +20,7 @@ namespace PhoenixRising.Website.Filters
             }
             else
             {
-                filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary{
-                    { "controller", "Account" },
-                    { "action", "Index" }
-                });
+                filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary{{ "controller", "Account" },{ "action", "Index" }});
             }
         }
     }
