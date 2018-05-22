@@ -13,6 +13,7 @@ namespace PhoenixRising.Website.Filters
     {
         public override void OnAuthorization(AuthorizationContext filterContext)
         {
+            //TODO: multiple roles at once
             var user = filterContext.HttpContext.User as ClaimsPrincipal;
             if (user != null && user.HasClaim(ClaimTypes.Role, Roles))
             {
