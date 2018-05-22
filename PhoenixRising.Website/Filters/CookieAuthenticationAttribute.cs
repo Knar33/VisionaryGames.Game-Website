@@ -73,8 +73,7 @@ namespace PhoenixRising.Website.Filters
                     }
                     else
                     {
-                        var authenticationManager = filterContext.HttpContext.GetOwinContext().Authentication;
-                        authenticationManager.SignOut();
+                        filterContext.HttpContext.GetOwinContext().Authentication.SignOut();
                     }
                 }
             }

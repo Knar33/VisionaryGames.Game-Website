@@ -306,21 +306,36 @@ namespace PhoenixRising.Website.Controllers
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
                 var ctx = Request.GetOwinContext();
-                ClaimsPrincipal user = ctx.Authentication.User;
-                string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
-                Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
+                ClaimsIdentity identity = new ClaimsIdentity(Request.GetOwinContext().Authentication.User.Identity);
+                string accessToken = identity.FindFirst("AccessToken").Value;
+                Guid userID = new Guid(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
+                string currentUserName = identity.FindFirst(ClaimTypes.Name).Value;
 
                 EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
                 request.FirstName = model.FirstName;
                 request.LastName = model.LastName;
                 request.Nicknane = model.Nicknane;
 
-                //TODO: If Nickname is changed, change it in the user claim
-
                 EditUserResponse response = request.Send();
 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
+                    //TODO: If Nickname is changed, change it in the user claim
+                    if (request.Nicknane != currentUserName)
+                    {
+                        identity.RemoveClaim(identity.FindFirst(ClaimTypes.Name));
+                        identity.AddClaim(new Claim(ClaimTypes.Name, request.Nicknane));
+
+                        var authenticationManager = HttpContext.GetOwinContext().Authentication;
+                        authenticationManager.SignOut();
+
+                        AuthenticationProperties properties = new AuthenticationProperties { IsPersistent = Convert.ToBoolean(identity.FindFirst(ClaimTypes.IsPersistent).Value) };
+                        authenticationManager.SignIn(properties, identity);
+
+                        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
+                        HttpContext.User = claimsPrincipal;
+                    }
+
                     TempData["Success"] = "You have successfully updated your info";
                     return RedirectToAction("Index", "Account");
                 }
@@ -424,6 +439,9 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ResendValidation(Resend model)
         {
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var appAccessToken = WebUtils.GetAppAccessToken();
+
             TempData["Success"] = "There was not really an email sent, this is not yet implemented";
             return RedirectToAction("Index", "Account");
         }
