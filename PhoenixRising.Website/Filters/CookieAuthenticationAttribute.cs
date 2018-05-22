@@ -18,10 +18,10 @@ namespace PhoenixRising.Website.Filters
         {
             //Get current user
             ClaimsPrincipal user = filterContext.HttpContext.User as ClaimsPrincipal;
-            ClaimsIdentity identity = new ClaimsIdentity(user.Identity);
 
             if (user != null && identity.IsAuthenticated)
             {
+                ClaimsIdentity identity = new ClaimsIdentity(user.Identity);
                 DateTime expiresTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(identity.FindFirst(ClaimTypes.Expiration).Value)).LocalDateTime;
 
                 if (expiresTime < DateTime.Now)
