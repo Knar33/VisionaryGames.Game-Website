@@ -20,7 +20,8 @@ namespace PhoenixRising.Website
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
                 LoginPath = new PathString("/Account/Login"),
-                ExpireTimeSpan = TimeSpan.FromDays(30)
+                ExpireTimeSpan = TimeSpan.FromDays(30),
+                CookieSecure = CookieSecureOption.Always
             });
         }
     }
