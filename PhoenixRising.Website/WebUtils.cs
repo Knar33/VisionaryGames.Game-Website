@@ -7,7 +7,7 @@ namespace PhoenixRising.Website
 {
     public class WebUtils
     {
-        public static string GetAppAccessToken()
+        public static string GetVaultSecret(string keyName)
         {
             KeyVaultClient KeyVault;
             try
@@ -21,7 +21,8 @@ namespace PhoenixRising.Website
                 throw e;
             }
 
-            return KeyVault.GetSecretAsync(ConfigurationManager.AppSettings["AzureVaultURL"]).Result.Value;
+            string vaultURL = ConfigurationManager.AppSettings["AzureVaultURL"] + keyName;
+            return KeyVault.GetSecretAsync(vaultURL).Result.Value;
         }
     }
 }
