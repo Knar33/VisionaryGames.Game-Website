@@ -55,7 +55,7 @@ namespace PhoenixRising.Website.Controllers
             if (ModelState.IsValid)
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var appAccessToken = WebUtils.GetAppAccessToken();
+                var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
 
                 RequestResetPasswordRequest resetRequest = new RequestResetPasswordRequest(connection, appAccessToken, model.Email);
                 RequestResetPasswordResponse resetResponse = resetRequest.Send();
@@ -86,7 +86,7 @@ namespace PhoenixRising.Website.Controllers
             if (ModelState.IsValid)
             {
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var appAccessToken = WebUtils.GetAppAccessToken();
+                var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
 
                 ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, appAccessToken, model.token, model.password1);
                 ResetPasswordResponse resetResponse = resetRequest.Send();
@@ -112,7 +112,7 @@ namespace PhoenixRising.Website.Controllers
         public ActionResult Verify(string token)
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-            var appAccessToken = WebUtils.GetAppAccessToken();
+            var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
 
             VerifyUserRequest verifyRequest = new VerifyUserRequest(connection, appAccessToken, token);
             VerifyUserResponse verifyResponse = verifyRequest.Send();
@@ -144,7 +144,7 @@ namespace PhoenixRising.Website.Controllers
             {
                 //Create user request
                 string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var appAccessToken = WebUtils.GetAppAccessToken();
+                var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
 
                 CreateUserRequest request = new CreateUserRequest(connection, appAccessToken);
                 request.Email = model.Email;
@@ -440,7 +440,7 @@ namespace PhoenixRising.Website.Controllers
         public ActionResult ResendValidation(Resend model)
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-            var appAccessToken = WebUtils.GetAppAccessToken();
+            var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
 
             ResendVerificationRequest resendRequest = new ResendVerificationRequest(connection, appAccessToken, model.EmailResend);
             ResendVerificationResponse resendResponse = resendRequest.Send();
