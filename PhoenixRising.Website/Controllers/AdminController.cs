@@ -54,6 +54,7 @@ namespace PhoenixRising.Website.Controllers
                     updateUserRequest.Administrator = model.Administrator ? 1 : 0;
                     updateUserRequest.Developer = model.Developer ? 1 : 0;
                     updateUserRequest.Banned = model.Banned ? 1 : 0;
+                    updateUserRequest.Banned = model.CommunityManager ? 1 : 0;
                     UpdateUserPermissionsResponse updateUserResponse = updateUserRequest.Send();
 
                     if (updateUserResponse.StatusCode == System.Net.HttpStatusCode.OK)
