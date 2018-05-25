@@ -33,8 +33,8 @@ namespace PhoenixRising.Website
             //keySection.DataProtectorType = mksSection.DataProtectorType;
             //keySection.Validation = mksSection.Validation;
 
-            //keySection.ValidationKey = WebUtils.GetAppAccessToken("MK_ValidationKey");
-            //keySection.DecryptionKey = WebUtils.GetAppAccessToken("MK_DecryptionKey");
+            //keySection.ValidationKey = WebUtils.GetAppAccessToken("MachineValidationKey");
+            //keySection.DecryptionKey = WebUtils.GetAppAccessToken("MachineDecryptionKey");
             //keySection.Decryption = "AES";
             //keySection.ValidationAlgorithm = "SHA1";
 
