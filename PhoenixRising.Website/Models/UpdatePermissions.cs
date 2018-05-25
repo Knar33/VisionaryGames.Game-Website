@@ -16,5 +16,6 @@ namespace PhoenixRising.Website.Models
         public bool Administrator { get; set; }
         public bool Developer { get; set; }
         public bool Banned { get; set; }
+        public bool CommunityManager { get; set; }
     }
 }
