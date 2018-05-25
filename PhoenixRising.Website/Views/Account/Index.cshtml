@@ -28,9 +28,11 @@ Level: @Model.LEVEL
 <br /><br />
 Developer: @Model.PERMISSIONS.Developer
 <br />
-Administrator: @Model.PERMISSIONS.Administrator
+Administrator: @Model.PERMISSIONS.
+<br />
+Community Manager: @Model.PERMISSIONS.CommunityManager
 <br /><br />
-@if (Model.PERMISSIONS.Developer || Model.PERMISSIONS.Administrator)
+@if (Model.PERMISSIONS.Developer || Model.PERMISSIONS.Administrator || Model.PERMISSIONS.CommunityManager)
 {
     <a href="https://phoenixrisingclient.blob.core.windows.net/windows-client/Temp/Builds/Client/Windows/Phoenix%20Rising%20Client%20(Win64).rar">Game Download Link</a>
 }
