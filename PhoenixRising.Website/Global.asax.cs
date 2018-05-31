@@ -23,22 +23,22 @@ namespace PhoenixRising.Website
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             AntiForgeryConfig.UniqueClaimTypeIdentifier = ClaimsIdentity.DefaultNameClaimType;
 
-            //var mksType = typeof(MachineKeySection);
-            //var mksSection = ConfigurationManager.GetSection("system.web/machineKey") as MachineKeySection;
-            //var resetMethod = mksType.GetMethod("Reset", BindingFlags.NonPublic | BindingFlags.Instance);
+            var mksType = typeof(MachineKeySection);
+            var mksSection = ConfigurationManager.GetSection("system.web/machineKey") as MachineKeySection;
+            var resetMethod = mksType.GetMethod("Reset", BindingFlags.NonPublic | BindingFlags.Instance);
 
-            //var keySection = new MachineKeySection();
-            //keySection.ApplicationName = mksSection.ApplicationName;
-            //keySection.CompatibilityMode = mksSection.CompatibilityMode;
-            //keySection.DataProtectorType = mksSection.DataProtectorType;
-            //keySection.Validation = mksSection.Validation;
+            var keySection = new MachineKeySection();
+            keySection.ApplicationName = mksSection.ApplicationName;
+            keySection.CompatibilityMode = mksSection.CompatibilityMode;
+            keySection.DataProtectorType = mksSection.DataProtectorType;
+            keySection.Validation = mksSection.Validation;
 
-            //keySection.ValidationKey = WebUtils.GetAppAccessToken("MachineValidationKey");
-            //keySection.DecryptionKey = WebUtils.GetAppAccessToken("MachineDecryptionKey");
-            //keySection.Decryption = "AES";
-            //keySection.ValidationAlgorithm = "SHA1";
+            keySection.ValidationKey = WebUtils.GetVaultSecret("MachineValidationKey");
+            keySection.DecryptionKey = WebUtils.GetVaultSecret("MachineDecryptionKey");
+            keySection.Decryption = "AES";
+            keySection.ValidationAlgorithm = "SHA1";
 
-            //resetMethod.Invoke(mksSection, new object[] { keySection });
+            resetMethod.Invoke(mksSection, new object[] { keySection });
         }
     }
 }
