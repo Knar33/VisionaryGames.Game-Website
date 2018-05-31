@@ -32,7 +32,7 @@ Administrator: @Model.PERMISSIONS.Administrator
 <br />
 Community Manager: @Model.PERMISSIONS.CommunityManager
 <br /><br />
-@if (Model.PERMISSIONS.Developer || Model.PERMISSIONS.Administrator || Model.PERMISSIONS.CommunityManager)
+@if (Model.PERMISSIONS.Developer)
 {
     @Html.ActionLink("Game Download Link", "Download", "Account");
 }
