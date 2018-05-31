@@ -8,6 +8,7 @@ using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Azure.KeyVault;
 using PhoenixRising.InternalAPI.Authentication;
 using PhoenixRising.InternalAPI.Account.Account;
+using PhoenixRising.InternalAPI.App.DownloadURL;
 using PhoenixRising.Website.Filters;
 using System.Security.Claims;
 using Microsoft.AspNet.Identity;
@@ -449,6 +450,28 @@ namespace PhoenixRising.Website.Controllers
             {
                 TempData["Success"] = "Another verification email was sent.";
                 return RedirectToAction("Index", "Account");
+            }
+            else
+            {
+                TempData["Errors"] = "There was an error processing your request";
+                return RedirectToAction("Index", "Account");
+            }
+        }
+
+        //Download
+        [CookieAuthentication]
+        [AuthorizeUser(Roles ="Developer")]
+        public ActionResult Download(PasswordReset model)
+        {
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
+
+            DownloadClientRequest downloadRequest = new DownloadClientRequest(connection, appAccessToken);
+            DownloadClientResponse downloadResponse = downloadRequest.Send();
+
+            if (downloadResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return Redirect(downloadResponse.Content);
             }
             else
             {

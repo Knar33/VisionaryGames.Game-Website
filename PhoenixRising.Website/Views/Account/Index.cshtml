@@ -34,7 +34,7 @@ Community Manager: @Model.PERMISSIONS.CommunityManager
 <br /><br />
 @if (Model.PERMISSIONS.Developer || Model.PERMISSIONS.Administrator || Model.PERMISSIONS.CommunityManager)
 {
-    <a href="https://pr-cdn-us-client.azureedge.net/windows-client/Builds/Client/Windows/Phoenix%20Rising%20Client%20(Win64).rar">Game Download Link</a>
+    Html.ActionLink("Game Download Link", "Download", "Account");
 }
 <br /><br />
 @if (Model.PERMISSIONS.Administrator)
