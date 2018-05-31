@@ -16,6 +16,7 @@ namespace PhoenixRising.Website
         
         public void ConfigureAuth(IAppBuilder app)
         {
+            //CookieSecure needs to be commented out in order to test locally.
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
