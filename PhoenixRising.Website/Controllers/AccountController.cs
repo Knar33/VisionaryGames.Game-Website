@@ -457,27 +457,5 @@ namespace PhoenixRising.Website.Controllers
                 return RedirectToAction("Index", "Account");
             }
         }
-
-        //Download
-        [CookieAuthentication]
-        [AuthorizeUser(Roles ="Developer")]
-        public ActionResult Download(PasswordReset model)
-        {
-            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-            var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
-
-            DownloadClientRequest downloadRequest = new DownloadClientRequest(connection, appAccessToken);
-            DownloadClientResponse downloadResponse = downloadRequest.Send();
-
-            if (downloadResponse.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                return Redirect(downloadResponse.Content);
-            }
-            else
-            {
-                TempData["Errors"] = "There was an error processing your request";
-                return RedirectToAction("Index", "Account");
-            }
-        }
     }
 }

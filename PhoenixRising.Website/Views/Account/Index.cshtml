@@ -34,7 +34,10 @@ Community Manager: @Model.PERMISSIONS.CommunityManager
 <br /><br />
 @if (Model.PERMISSIONS.Developer)
 {
-    @Html.ActionLink("Game Download Link", "Download", "Account");
+    @Html.ActionLink("Game Download", "GameClient", "Download");
+    <br /><br />
+
+    @Html.ActionLink("Server Download", "GameServer", "Download");
 }
 <br /><br />
 @if (Model.PERMISSIONS.Administrator)
