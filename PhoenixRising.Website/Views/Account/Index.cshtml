@@ -35,12 +35,11 @@ Community Manager: @Model.PERMISSIONS.CommunityManager
 @if (Model.PERMISSIONS.Developer)
 {
     @Html.ActionLink("Game Download", "GameClient", "Download");
-    <br /><br />
-
-    @Html.ActionLink("Server Download", "GameServer", "Download");
 }
 <br /><br />
 @if (Model.PERMISSIONS.Administrator)
 {
+    @Html.ActionLink("Server Download", "GameServer", "Download");
+    <br /><br />
     @Html.ActionLink("Admin Panel", "Index", "Admin");
 }
