@@ -35,7 +35,7 @@ namespace PhoenixRising.Website.Controllers
 
         //Game download
         [CookieAuthentication]
-        [AuthorizeUser(Roles = "Developer")]
+        [AuthorizeUser(Roles = "Administrator")]
         public ActionResult GameServer(PasswordReset model)
         {
             string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
