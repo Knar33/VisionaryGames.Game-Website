@@ -53,22 +53,20 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult PasswordReset(PasswordReset model)
         {
-            if (ModelState.IsValid)
-            {
-                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
-
-                RequestResetPasswordRequest resetRequest = new RequestResetPasswordRequest(connection, appAccessToken, model.Email);
-                RequestResetPasswordResponse resetResponse = resetRequest.Send();
-
-                //always act like success - don't want people fishing for email addresses
-                TempData["Success"] = "An email was sent to the email address provided. Please follow the instructions to reset your password.";
-                return RedirectToAction("Login", "Account");
-            }
-            else
+            if (!ModelState.IsValid)
             {
                 return View(model);
             }
+
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
+
+            RequestResetPasswordRequest resetRequest = new RequestResetPasswordRequest(connection, appAccessToken, model.Email);
+            RequestResetPasswordResponse resetResponse = resetRequest.Send();
+
+            //always act like success - don't want people fishing for email addresses
+            TempData["Success"] = "An email was sent to the email address provided. Please follow the instructions to reset your password.";
+            return RedirectToAction("Login", "Account");
         }
         
         //Password 
@@ -84,27 +82,25 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Password(Password model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
+                return View(model);
+            }
 
-                ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, appAccessToken, model.token, model.password1);
-                ResetPasswordResponse resetResponse = resetRequest.Send();
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
 
-                if (resetResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    TempData["Success"] = "Your password was changed!";
-                    return RedirectToAction("Login", "Account");
-                }
-                else
-                {
-                    TempData["Errors"] = "There was an error processing your request";
-                    return View(model);
-                }
+            ResetPasswordRequest resetRequest = new ResetPasswordRequest(connection, appAccessToken, model.token, model.password1);
+            ResetPasswordResponse resetResponse = resetRequest.Send();
+
+            if (resetResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                TempData["Success"] = "Your password was changed!";
+                return RedirectToAction("Login", "Account");
             }
             else
             {
+                TempData["Errors"] = "There was an error processing your request";
                 return View(model);
             }
         }
@@ -141,43 +137,40 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Register(Register model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                //Create user request
-                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
+                return View(model);
+            }
+            
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var appAccessToken = WebUtils.GetVaultSecret("AppConnectionKey");
 
-                CreateUserRequest request = new CreateUserRequest(connection, appAccessToken);
-                request.Email = model.Email;
-                request.FirstName = model.FirstName;
-                request.LastName = model.LastName;
-                request.Nicknane = model.Nicknane;
-                request.Password = model.password1;
+            CreateUserRequest request = new CreateUserRequest(connection, appAccessToken);
+            request.Email = model.Email;
+            request.FirstName = model.FirstName;
+            request.LastName = model.LastName;
+            request.Nicknane = model.Nicknane;
+            request.Password = model.password1;
 
-                CreateUserResponse response = request.Send();
+            CreateUserResponse response = request.Send();
                 
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    TempData["Success"] = "You have successfully registered an account. You can now sign in below.";
-                    return RedirectToAction("Login", "Account");
-                }
-                else
-                {
-                    if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                    {
-                        //TODO: Parse the actual response error
-                        TempData["Errors"] = "Bad request";
-                    }
-                    else
-                    {
-                        TempData["Errors"] = "There was an error processing your request. Please try again.";
-                    }
-
-                    return View(model);
-                }
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                TempData["Success"] = "You have successfully registered an account. You can now sign in below.";
+                return RedirectToAction("Login", "Account");
             }
             else
             {
+                if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                {
+                    //TODO: Parse the actual response error
+                    TempData["Errors"] = "Bad request";
+                }
+                else
+                {
+                    TempData["Errors"] = "There was an error processing your request. Please try again.";
+                }
+
                 return View(model);
             }
         }
@@ -193,74 +186,71 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Login(Login model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                //make login request
-                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+                return View(model);
+            }
+            
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
 
-                LoginRequest loginRequest = new LoginRequest(connection, model.Email, model.password);
-                LoginResponse loginResponse = loginRequest.Send();
+            LoginRequest loginRequest = new LoginRequest(connection, model.Email, model.password);
+            LoginResponse loginResponse = loginRequest.Send();
 
-                if (loginResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            if (loginResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                string accessToken = loginResponse.access_token;
+                Guid userID = new Guid(loginResponse.user_id);
+
+                GetUserDetailsRequest userDetailRequest = new GetUserDetailsRequest(connection, accessToken, userID);
+                GetUserDetailsResponse userDetailResponse = userDetailRequest.Send();
+                if (userDetailResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    string accessToken = loginResponse.access_token;
-                    Guid userID = new Guid(loginResponse.user_id);
-
-                    GetUserDetailsRequest userDetailRequest = new GetUserDetailsRequest(connection, accessToken, userID);
-                    GetUserDetailsResponse userDetailResponse = userDetailRequest.Send();
-                    if (userDetailResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                    List<Claim> claims = new List<Claim>();
+                    claims.Add(new Claim("AccessToken", loginResponse.access_token));
+                    claims.Add(new Claim("RefreshToken", loginResponse.refresh_token));
+                    claims.Add(new Claim(ClaimTypes.Name, loginResponse.user_nick));
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, loginResponse.user_id));
+                    claims.Add(new Claim(ClaimTypes.Expiration, loginResponse.expireTime));
+                    claims.Add(new Claim(ClaimTypes.IsPersistent, model.RememberMe.ToString()));
+                    if (userDetailResponse.PERMISSIONS.Administrator)
                     {
-                        List<Claim> claims = new List<Claim>();
-                        claims.Add(new Claim("AccessToken", loginResponse.access_token));
-                        claims.Add(new Claim("RefreshToken", loginResponse.refresh_token));
-                        claims.Add(new Claim(ClaimTypes.Name, loginResponse.user_nick));
-                        claims.Add(new Claim(ClaimTypes.NameIdentifier, loginResponse.user_id));
-                        claims.Add(new Claim(ClaimTypes.Expiration, loginResponse.expireTime));
-                        claims.Add(new Claim(ClaimTypes.IsPersistent, model.RememberMe.ToString()));
-                        if (userDetailResponse.PERMISSIONS.Administrator)
-                        {
-                            claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
-                        }
-                        if (userDetailResponse.PERMISSIONS.Developer)
-                        {
-                            claims.Add(new Claim(ClaimTypes.Role, "Developer"));
-                        }
-
-                        ClaimsIdentity id = new ClaimsIdentity(claims, DefaultAuthenticationTypes.ApplicationCookie);
-                        var authenticationManager = Request.GetOwinContext().Authentication;
-
-                        AuthenticationProperties properties = new AuthenticationProperties { IsPersistent = model.RememberMe };
-                        authenticationManager.SignIn(properties, id);
-
-                        //redirect to register success, login success
-                        TempData["Success"] = "You have successfully signed in!";
-                        return RedirectToAction("Index", "Account");
-                    }    
-                    else
-                    {
-                        TempData["Errors"] = "There was an error processing your request.";
-                        return View(model);
+                        claims.Add(new Claim(ClaimTypes.Role, "Administrator"));
                     }
-                }
+                    if (userDetailResponse.PERMISSIONS.Developer)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, "Developer"));
+                    }
+
+                    ClaimsIdentity id = new ClaimsIdentity(claims, DefaultAuthenticationTypes.ApplicationCookie);
+                    var authenticationManager = Request.GetOwinContext().Authentication;
+
+                    AuthenticationProperties properties = new AuthenticationProperties { IsPersistent = model.RememberMe };
+                    authenticationManager.SignIn(properties, id);
+
+                    //redirect to register success, login success
+                    TempData["Success"] = "You have successfully signed in!";
+                    return RedirectToAction("Index", "Account");
+                }    
                 else
                 {
-                    if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    {
-                        TempData["Errors"] = "Your email and password do not match. Please try again.";
-                    }
-                    else if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotAcceptable)
-                    {
-                        TempData["Resend"] = model.Email;
-                    }
-                    else
-                    {
-                        TempData["Errors"] = "There was an error processing your request. Please try again.";
-                    }
+                    TempData["Errors"] = "There was an error processing your request.";
                     return View(model);
                 }
             }
             else
             {
+                if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    TempData["Errors"] = "Your email and password do not match. Please try again.";
+                }
+                else if (loginResponse.StatusCode == System.Net.HttpStatusCode.NotAcceptable)
+                {
+                    TempData["Resend"] = model.Email;
+                }
+                else
+                {
+                    TempData["Errors"] = "There was an error processing your request. Please try again.";
+                }
                 return View(model);
             }
         }
@@ -303,51 +293,49 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult EditInfo(EditInfo model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var ctx = Request.GetOwinContext();
-                ClaimsIdentity identity = new ClaimsIdentity(Request.GetOwinContext().Authentication.User.Identity);
-                string accessToken = identity.FindFirst("AccessToken").Value;
-                Guid userID = new Guid(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
-                string currentUserName = identity.FindFirst(ClaimTypes.Name).Value;
+                return View(model);
+            }
 
-                EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
-                request.FirstName = model.FirstName;
-                request.LastName = model.LastName;
-                request.Nicknane = model.Nicknane;
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var ctx = Request.GetOwinContext();
+            ClaimsIdentity identity = new ClaimsIdentity(Request.GetOwinContext().Authentication.User.Identity);
+            string accessToken = identity.FindFirst("AccessToken").Value;
+            Guid userID = new Guid(identity.FindFirst(ClaimTypes.NameIdentifier).Value);
+            string currentUserName = identity.FindFirst(ClaimTypes.Name).Value;
 
-                EditUserResponse response = request.Send();
+            EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
+            request.FirstName = model.FirstName;
+            request.LastName = model.LastName;
+            request.Nicknane = model.Nicknane;
 
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            EditUserResponse response = request.Send();
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                //TODO: If Nickname is changed, change it in the user claim
+                if (request.Nicknane != currentUserName)
                 {
-                    //TODO: If Nickname is changed, change it in the user claim
-                    if (request.Nicknane != currentUserName)
-                    {
-                        identity.RemoveClaim(identity.FindFirst(ClaimTypes.Name));
-                        identity.AddClaim(new Claim(ClaimTypes.Name, request.Nicknane));
+                    identity.RemoveClaim(identity.FindFirst(ClaimTypes.Name));
+                    identity.AddClaim(new Claim(ClaimTypes.Name, request.Nicknane));
 
-                        var authenticationManager = HttpContext.GetOwinContext().Authentication;
-                        authenticationManager.SignOut();
+                    var authenticationManager = HttpContext.GetOwinContext().Authentication;
+                    authenticationManager.SignOut();
 
-                        AuthenticationProperties properties = new AuthenticationProperties { IsPersistent = Convert.ToBoolean(identity.FindFirst(ClaimTypes.IsPersistent).Value) };
-                        authenticationManager.SignIn(properties, identity);
+                    AuthenticationProperties properties = new AuthenticationProperties { IsPersistent = Convert.ToBoolean(identity.FindFirst(ClaimTypes.IsPersistent).Value) };
+                    authenticationManager.SignIn(properties, identity);
 
-                        ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
-                        HttpContext.User = claimsPrincipal;
-                    }
-
-                    TempData["Success"] = "You have successfully updated your info";
-                    return RedirectToAction("Index", "Account");
+                    ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(identity);
+                    HttpContext.User = claimsPrincipal;
                 }
-                else
-                {
-                    TempData["Errors"] = "There was an error processing your request. Please try again.";
-                    return View(model);
-                }
+
+                TempData["Success"] = "You have successfully updated your info";
+                return RedirectToAction("Index", "Account");
             }
             else
             {
+                TempData["Errors"] = "There was an error processing your request. Please try again.";
                 return View(model);
             }
         }
@@ -363,33 +351,31 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ChangeEmail(ChangeEmail model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var ctx = Request.GetOwinContext();
-                ClaimsPrincipal user = ctx.Authentication.User;
-                string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
-                Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
+                return View(model);
+            }
 
-                EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
-                request.Email = model.Email;
-                request.Password = model.password1;
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var ctx = Request.GetOwinContext();
+            ClaimsPrincipal user = ctx.Authentication.User;
+            string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
+            Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
 
-                EditUserResponse response = request.Send();
+            EditUserRequest request = new EditUserRequest(connection, accessToken, userID);
+            request.Email = model.Email;
+            request.Password = model.password1;
 
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    TempData["Success"] = "You have successfully updated your email. An email has been sent to the new address with instructions on how to verify the address change.";
-                    return RedirectToAction("Index", "Account");
-                }
-                else
-                {
-                    TempData["Errors"] = "There was an error processing your request. Please try again.";
-                    return View(model);
-                }
+            EditUserResponse response = request.Send();
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                TempData["Success"] = "You have successfully updated your email. An email has been sent to the new address with instructions on how to verify the address change.";
+                return RedirectToAction("Index", "Account");
             }
             else
             {
+                TempData["Errors"] = "There was an error processing your request. Please try again.";
                 return View(model);
             }
         }
@@ -407,30 +393,28 @@ namespace PhoenixRising.Website.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ChangePassword(ChangePassword model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
-                var ctx = Request.GetOwinContext();
-                ClaimsPrincipal user = ctx.Authentication.User;
-                string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
-                Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
+                return View(model);
+            }
 
-                ChangePasswordRequest resetRequest = new ChangePasswordRequest(connection, accessToken, userID, model.OldPassword, model.Password1);
-                ChangePasswordResponse resetResponse = resetRequest.Send();
+            string connection = ConfigurationManager.AppSettings["InternalAPIURL"];
+            var ctx = Request.GetOwinContext();
+            ClaimsPrincipal user = ctx.Authentication.User;
+            string accessToken = user.Claims.FirstOrDefault(x => x.Type == "AccessToken").Value;
+            Guid userID = new Guid(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier).Value);
 
-                if (resetResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    TempData["Success"] = "Your password was changed!";
-                    return RedirectToAction("Index", "Account");
-                }
-                else
-                {
-                    TempData["Errors"] = "There was an error processing your request";
-                    return View(model);
-                }
+            ChangePasswordRequest resetRequest = new ChangePasswordRequest(connection, accessToken, userID, model.OldPassword, model.Password1);
+            ChangePasswordResponse resetResponse = resetRequest.Send();
+
+            if (resetResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                TempData["Success"] = "Your password was changed!";
+                return RedirectToAction("Index", "Account");
             }
             else
             {
+                TempData["Errors"] = "There was an error processing your request";
                 return View(model);
             }
         }
