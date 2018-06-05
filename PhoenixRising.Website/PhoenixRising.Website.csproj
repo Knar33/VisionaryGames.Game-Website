@@ -263,6 +263,7 @@
     <Content Include="Views\Account\ChangePassword.cshtml" />
     <Content Include="Views\Admin\UpdatePermissions.cshtml" />
     <Content Include="Views\Admin\Index.cshtml" />
+    <Content Include="Views\Shared\_Homepage.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
